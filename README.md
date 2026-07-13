@@ -1,4 +1,4 @@
-# Capital Wasteland Script Extender
+# Project Arroyo Script Extender
 
 This is the Script Extender Plugin for Project Arroyo using CommonLibF4. Thanks to [FlenarnDev](https://github.com/FlenarnDev) for his mentorship on my way of learning Script Extender and reverse engineering.
 This is a WIP.
