@@ -30,6 +30,10 @@ namespace PArroyo {
 
 		void HookExamineMenuBuildConfirmed(RE::ExamineMenu* a_this, bool a_ownerIsWorkbench);
 
+		void HookBuildWeaponScrappingArray(RE::ExamineMenu* a_this);
+
+		void HookRemoveItem1(RE::BGSInventoryList* a_this, RE::TESBoundObject* a_object, std::uint32_t a_stackID, std::uint32_t a_count, bool a_manualMerge);
+
 		bool Hook_EquipObject(
 			RE::ActorEquipManager* a_actorEquipManager,
 			RE::Actor* a_actor,

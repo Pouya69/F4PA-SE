@@ -59,6 +59,8 @@ namespace Shared {
 
 	RE::TESObjectMISC* repairKit;
 
+	RE::BGSKeyword* notScrappableKeyword;
+
 	void InitializeSharedForms(RE::TESDataHandler* dataHandler)
 	{
 		crWeaponRanged = dataHandler->LookupForm<RE::BGSKeyword>(0x189348, "Fallout4.esm");
@@ -70,6 +72,23 @@ namespace Shared {
 		fArmourConditionReductionPerPercentage = dataHandler->LookupForm<RE::TESGlobal>(0x0D1BF8, MOD_ESM);
 
 		repairKit = dataHandler->LookupForm<RE::TESObjectMISC>(0x002E4F, CURRENT_ESP);
+
+		notScrappableKeyword = dataHandler->LookupForm<RE::BGSKeyword>(0x005477, CURRENT_ESP);
+
+	}
+
+	bool IsJunkItem(RE::TESBoundObject* obj)
+	{
+		// "Take my junk" must take ONLY scrappable junk. caps (0xF), bobby pins
+		// (0xA), keys, quest items and collectibles are all kMISC too, so a bare
+		// kMISC test wrongly swept them up (reported by a VR user). The engine's
+		// signal for real junk is a non-empty crafting-component list
+		// (TESObjectMISC::componentData); the non-junk MISC above have none.
+		// (Books are kBOOK and were never matched here.)
+		if (!obj || obj->formType.get() != RE::ENUM_FORM_ID::kMISC) return false;
+		auto* misc = static_cast<RE::TESObjectMISC*>(obj);
+		if ((misc->formID & 0x00FFFFFFu) == 0x0000000Fu || (misc->formID & 0x00FFFFFFu) == 0x0000000Au || misc->HasKeyword(Shared::notScrappableKeyword)) return false;  // caps or bobby pins, never
+		return misc->componentData && misc->componentData->size() != 0 && (std::uint32_t)misc->componentData->at(0).first->formID != (std::uint32_t)misc->formID && (std::int32_t)misc->GetFormType() != (std::int32_t)RE::ENUM_FORM_ID::kCMPO;
 	}
 
 	std::uint32_t GetAvailableComponentCount(RE::BGSInventoryList* a_list, RE::TESForm* a_form)

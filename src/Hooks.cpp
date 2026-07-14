@@ -63,6 +63,7 @@
 #include <RE/R/RepairFailureCallback.h>
 #include <RE/T/TESDataHandler.h>
 #include <Scaleform/P/Ptr.h>
+#include "Menus/Workbench_Additions.h"
 
 namespace PArroyo {
 	namespace Hooks {
@@ -454,13 +455,20 @@ namespace PArroyo {
 		REL::Relocation<GetBuildConfirmQuestionSig> ExamineMenuGetBuildConfirmQuestionOriginal;
 		void HookExamineMenuGetBuildConfirmQuestion(RE::ExamineMenu* a_this, char* a_buffer, std::uint32_t a_bufferLength)
 		{
-			const RE::WorkbenchMenuBase::ModChoiceData* modChoiceData;
+			RE::WorkbenchMenuBase::ModChoiceData* modChoiceData;
 			const char* fullName;
 			const char* type;
 
-			if (a_this->QCurrentModChoiceData()->recipe)
+			if (PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk) {
+				snprintf(a_buffer, a_bufferLength, "Scrap all junk items?");
+				return;
+			}
+
+			auto choiceData = a_this->QCurrentModChoiceData();
+
+			if (choiceData->recipe)
 			{
-				modChoiceData = a_this->QCurrentModChoiceData();
+				modChoiceData = new RE::WorkbenchMenuBase::ModChoiceData(*choiceData);
 				if (a_this->repairing)
 				{
 					type = "$$Repair";
@@ -489,6 +497,9 @@ namespace PArroyo {
 		void HookExamineMenuBuildConfirmed(RE::ExamineMenu* a_this, bool a_ownerIsWorkbench)
 		{
 			using namespace RE;
+
+			REX::DEBUG("ExamineMenuBuildConfirmed - Called");
+
 			if (a_this->repairing)
 			{
 				std::uint32_t selectedIndex = a_this->GetSelectedIndex();
@@ -509,6 +520,9 @@ namespace PArroyo {
 							{
 								stack->extra->SetHealthPerc(1.0f);
 
+								std::string msg = std::format("{}'s new condition: {}%", inventoryItem->GetDisplayFullName(inventoryUUIEntry->stackIndex.at(0)), (int)(stack->extra->GetHealthPerc() * 100));
+								RE::SendHUDMessage::ShowHUDMessage(msg.c_str(), nullptr, true, true);
+
 								BGSInventoryItem::CheckStackIDFunctor compareFunction(inventoryUUIEntry->stackIndex.at(0));
 								BGSInventoryItem::SetHealthFunctor writeFunction(stack->extra->GetHealthPerc());
 								writeFunction.shouldSplitStacks = 0x101;
@@ -527,8 +541,7 @@ namespace PArroyo {
 								a_this->UpdateItemCard(false);
 								a_this->repairing = false;
 
-								std::string msg = std::format("{}'s new condition: {}%", inventoryItem->GetDisplayFullName(inventoryUUIEntry->stackIndex.at(0)), (int)(stack->extra->GetHealthPerc() * 100));
-								RE::SendHUDMessage::ShowHUDMessage(msg.c_str(), nullptr, true, true);
+								
 
 								if (!a_this->uiMovie->asMovieRoot->Invoke("root.BaseInstance.UpdateButtons", nullptr, nullptr, 0)) {
 									REX::DEBUG("Repair Confirmed - Could not update buttons.");
@@ -542,6 +555,123 @@ namespace PArroyo {
 			{
 				ExamineMenuBuildConfirmedOriginal(a_this, a_ownerIsWorkbench);
 			}
+		}
+
+		DetourXS hook_BuildWeaponScrappingArray;
+		typedef void(BuildWeaponScrappingArraySig)(RE::ExamineMenu*);
+		REL::Relocation<BuildWeaponScrappingArraySig> BuildWeaponScrappingArrayOriginal;
+		void HookBuildWeaponScrappingArray(RE::ExamineMenu* a_this)
+		{
+			if (!PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk) {
+				// Vanilla scrapping.
+				BuildWeaponScrappingArrayOriginal(a_this);
+				return;
+			}
+
+			a_this->scrappingArray.clear();
+
+			// Scrap all junk logic.
+			auto player = RE::PlayerCharacter::GetSingleton();
+
+			for (std::uint32_t i = 0; i < player->inventoryList->data.size(); i++)
+			{
+				RE::BGSInventoryItem inventoryItem = player->inventoryList->data.at(i);
+
+				if (!inventoryItem.object || !Shared::IsJunkItem(inventoryItem.object) || inventoryItem.IsQuestObject(0))
+					continue;
+
+				RE::TESObjectMISC* miscObject = static_cast<RE::TESObjectMISC*>(inventoryItem.object);
+				if (!miscObject)
+					continue;
+
+				if (!miscObject->componentData || miscObject->componentData->empty())
+					continue;
+				
+
+
+				for (auto it = miscObject->componentData->begin(); it != miscObject->componentData->end(); ++it) {
+					auto boundObj = reinterpret_cast<RE::TESBoundObject*>(it->first);
+					if (!boundObj)
+						continue;
+
+					// REX::DEBUG("BuildWeaponScrappingArray - scrapItem found with count: {}", it->second.i);
+
+					const auto count = it->second.i * inventoryItem.GetCount();
+					// REX::DEBUG("BuildWeaponScrappingArray - scrapItem found with count: {}", count);
+					a_this->scrappingArray.push_back(RE::BSTTuple<RE::TESBoundObject*, std::uint32_t>(boundObj, count));
+					
+				}
+			}
+			
+		}
+
+		DetourXS hook_RemoveItem1;
+		typedef void(RemoveItem1Sig)(RE::BGSInventoryList*, RE::TESBoundObject*, std::uint32_t, std::uint32_t, bool);
+		REL::Relocation<RemoveItem1Sig> RemoveItem1Original;
+		void HookRemoveItem1(RE::BGSInventoryList* a_this, RE::TESBoundObject* a_object, std::uint32_t a_stackID, std::uint32_t a_count, bool a_manualMerge)
+		{
+			REX::DEBUG(std::format("RemoveItem1 called. stackID: {}, count: {}, manualMerge: {}", a_stackID, a_count, a_manualMerge ? 1 : 0).c_str());
+			//RE::TESObjectREFR::RemoveItem
+			//RemoveItem1Original(a_this, a_object, a_stackID, a_count, a_manualMerge);
+			
+			auto player = RE::PlayerCharacter::GetSingleton();
+			if (!a_this || !player || !player->inventoryList || a_this->owner != player->inventoryList->owner) {
+				RemoveItem1Original(a_this, a_object, a_stackID, a_count, a_manualMerge);
+				return;
+			}
+
+			if (PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk) {
+				if (!RE::UI::GetSingleton()->GetMenuOpen<RE::ExamineMenu>()) {
+					RemoveItem1Original(a_this, a_object, a_stackID, a_count, a_manualMerge);
+					PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk = false;
+					return;
+				}
+
+				if (!Shared::IsJunkItem(a_object)) {
+
+					for (std::uint32_t i = 0; i < player->inventoryList->data.size(); i++)
+					{
+						RE::BGSInventoryItem inventoryItem = player->inventoryList->data.at(i);
+
+						if (!inventoryItem.object || !Shared::IsJunkItem(inventoryItem.object) || inventoryItem.IsQuestObject(0))
+							continue;
+
+						switch (inventoryItem.object->GetFormType())
+						{
+						case RE::ENUM_FORM_ID::kWEAP: {
+							if (static_cast<RE::TESObjectWEAP*>(inventoryItem.object)->HasKeyword(Shared::notScrappableKeyword)) {
+								continue;
+							}
+							break;
+						}
+						case RE::ENUM_FORM_ID::kARMO: {
+							if (static_cast<RE::TESObjectARMO*>(inventoryItem.object)->HasKeyword(Shared::notScrappableKeyword)) {
+								continue;
+							}
+							break;
+						}
+						default:
+							break;
+						}
+
+						auto removeData = RE::TESObjectREFR::RemoveItemData(inventoryItem.object, inventoryItem.GetCount());
+
+						player->RemoveItem(removeData);
+
+					}
+					RE::SendHUDMessage::ShowHUDMessage("All junk items were scrapped!", "OBJLunchboxKidsRobotBuild", false, true);
+					RE::UI::GetSingleton()->GetMenu<RE::ExamineMenu>()->uiMovie->asMovieRoot->Invoke("root.BaseInstance.UpdateButtons", nullptr, nullptr, 0);
+					PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk = false;
+				}
+				else {
+					RemoveItem1Original(a_this, a_object, a_stackID, a_count, a_manualMerge);
+				}
+
+				return;
+			}
+			
+			RemoveItem1Original(a_this, a_object, a_stackID, a_count, a_manualMerge);
+			
 		}
 
 		DetourXS hook_ShowBuildFailureMessage;
@@ -646,6 +776,10 @@ namespace PArroyo {
 					{
 						RE::WorkbenchMenuBase::ModChoiceData* currentModChoiceData = (a_this->modChoiceArray.data() + modChoiceIndex);
 
+						if (!currentModChoiceData->recipe->requiredItems) {
+							return 0;
+						}
+
 						// Remove any possible required perks, as we don't take that into account when repairing.
 						if (currentModChoiceData->requiredPerks.size() > 0)
 						{
@@ -670,24 +804,23 @@ namespace PArroyo {
 
 							REX::DEBUG("RepairReduction");
 
-							for (std::uint32_t i = 0; i < currentModChoiceData->recipe->requiredItems->size(); i++) {
-								auto& needed = currentModChoiceData->recipe->requiredItems->at(i);
+							for (auto needed = currentModChoiceData->recipe->requiredItems->begin(); needed != currentModChoiceData->recipe->requiredItems->end(); ++needed) {
 
-								const std::uint32_t oldCount = needed.second.i;
+								const std::uint32_t oldCount = needed->second.i;
 
 								if (repairSkillReduction > 1) {
-									int newCount = needed.second.i;
+									int newCount = needed->second.i;
 									newCount -= repairSkillReduction;
-									needed.second.i = max(newCount, 1);
+									needed->second.i = max(newCount, 1);
 								}
 								
 
-								needed.second.i = max((std::uint32_t)needed.second.i * (1 - currentCondition), 1);
+								needed->second.i = max((std::uint32_t)needed->second.i * (1 - currentCondition), 1);
 								
 								// needed.second.f = max((int)needed.second.f / repairSkillReduction, 1);
-								(*currentModChoiceData->recipe->requiredItems)[i] = needed;
+								// (*currentModChoiceData->recipe->requiredItems)[i] = needed;
 
-								REX::DEBUG(std::format("RepairReduction - Comp1 from {} to {}. Skill Reduction: {}", oldCount, needed.second.i, repairSkillReduction).c_str());
+								// REX::DEBUG(std::format("RepairReduction - Comp1 from {} to {}. Skill Reduction: {}", oldCount, needed.second.i, repairSkillReduction).c_str());
 							}
 							
 						}
@@ -819,7 +952,79 @@ namespace PArroyo {
 			PArroyo::WPNUtilities::UpdateHUDCondition(weaponConditionData);
 
 		}
-		
+
+		DetourXS hook_ConsumeSelectedItems;
+		typedef void(ConsumeSelectedItemsSig)(RE::ExamineMenu*, bool, const RE::BGSSoundDescriptorForm*);
+		REL::Relocation<ConsumeSelectedItemsSig> ConsumeSelectedItemsOriginal;
+		void HookConsumeSelectedItems(RE::ExamineMenu* a_this, bool a_autoBuild, const RE::BGSSoundDescriptorForm* a_consumeSound) {
+			if (!PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk) {
+				ConsumeSelectedItemsOriginal(a_this, a_autoBuild, a_consumeSound);
+				return;
+			}
+		}
+
+		using RemoveItem_t = RE::ObjectRefHandle(*)(RE::TESObjectREFR*, RE::TESObjectREFR::RemoveItemData&);
+		inline REL::Relocation<RemoveItem_t> _OriginalRemoveItem;
+
+		RE::ObjectRefHandle Hooked_RemoveItem( RE::TESObjectREFR* a_this, RE::TESObjectREFR::RemoveItemData& a_data)
+		{
+			if (PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk) {
+				if (!RE::UI::GetSingleton()->GetMenuOpen<RE::ExamineMenu>()) {
+					PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk = false;
+					return _OriginalRemoveItem(a_this, a_data);
+				}
+
+				if (!Shared::IsJunkItem(a_data.object)) {
+					PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk = false;
+					auto player = RE::PlayerCharacter::GetSingleton();
+					for (std::uint32_t i = 0; i < player->inventoryList->data.size(); i++)
+					{
+						RE::BGSInventoryItem inventoryItem = player->inventoryList->data.at(i);
+						if (!inventoryItem.object || !Shared::IsJunkItem(inventoryItem.object) || inventoryItem.IsQuestObject(0))
+							continue;
+
+						switch (inventoryItem.object->GetFormType())
+						{
+						case RE::ENUM_FORM_ID::kWEAP: {
+							if (static_cast<RE::TESObjectWEAP*>(inventoryItem.object)->HasKeyword(Shared::notScrappableKeyword)) {
+								continue;
+							}
+							break;
+						}
+						case RE::ENUM_FORM_ID::kARMO: {
+							if (static_cast<RE::TESObjectARMO*>(inventoryItem.object)->HasKeyword(Shared::notScrappableKeyword)) {
+								continue;
+							}
+							break;
+						}
+						default:
+							break;
+						}
+
+						auto removeData = RE::TESObjectREFR::RemoveItemData(inventoryItem.object, inventoryItem.GetCount());
+
+						player->RemoveItem(removeData);
+					}
+					RE::SendHUDMessage::ShowHUDMessage("All junk items were scrapped!", "OBJLunchboxKidsRobotBuild", false, true);
+					RE::UI::GetSingleton()->GetMenu<RE::ExamineMenu>()->uiMovie->asMovieRoot->Invoke("root.BaseInstance.UpdateButtons", nullptr, nullptr, 0);
+
+					RE::TESObjectREFR::RemoveItemData a = RE::TESObjectREFR::RemoveItemData(a_this, 0);
+					return _OriginalRemoveItem(a_this, a);
+				}
+				else {
+					return _OriginalRemoveItem(a_this, a_data);
+				}
+			}
+
+
+			return _OriginalRemoveItem(a_this, a_data);
+		}
+
+		static void InstallRemoveItemHook()
+		{
+			REL::Relocation<std::uintptr_t> vtbl{ RE::PlayerCharacter::VTABLE[0] };
+			_OriginalRemoveItem = vtbl.write_vfunc(0x6D, &Hooked_RemoveItem);
+		}
 		
 		
 		namespace Registers {
@@ -837,8 +1042,12 @@ namespace PArroyo {
 				RegisterDetourFunction(hook_GetBuildConfirmQuestion, RE::ID::ExamineMenu::GetBuildConfirmQuestion, &HookExamineMenuGetBuildConfirmQuestion, ExamineMenuGetBuildConfirmQuestionOriginal, "ExamineMenuGetBuildConfirmQuestion");
 				RegisterDetourFunction(hook_ShowBuildFailureMessage, RE::ID::WorkbenchMenuBase::ShowBuildFailureMessage, &HookWorkbenchMenuBaseShowBuildFailureMessage, WorkbenchMenuBaseShowBuildFailureMessageOriginal, "WorkbenchMenuBaseShowBuildFailureMessage");
 				RegisterDetourFunction(hook_ExamineMenuBuildConfirmed, RE::ID::ExamineMenu::BuildConfirmed, &HookExamineMenuBuildConfirmed, ExamineMenuBuildConfirmedOriginal, "ExamineMenuBuildConfirmed");
-
+				RegisterDetourFunction(hook_BuildWeaponScrappingArray, RE::ID::ExamineMenu::BuildWeaponScrappingArray, &HookBuildWeaponScrappingArray, BuildWeaponScrappingArrayOriginal, "BuildWeaponScrappingArray");
 				
+				InstallRemoveItemHook();
+				// RegisterDetourFunction(hook_RemoveItem1, RE::ID::BGSInventoryList::RemoveItem1, &HookRemoveItem1, RemoveItem1Original, "RemoveItem1");
+				
+				// RegisterDetourFunction(hook_ConsumeSelectedItems, RE::ID::ExamineMenu::ConsumeSelectedItems, &HookConsumeSelectedItems, ConsumeSelectedItemsOriginal, "ConsumeSelectedItems");
 
 				// RegisterDetourFunction(hook_ClosedownPipboy, RE::ID::PipboyManager::ClosedownPipboy, &Hook_ClosedownPipboy, ClosedownPipboyOriginal, "ClosedownPipboy");
 				// RegisterDetourFunction(hook_LowerPipboy, RE::ID::PipboyManager::LowerPipboy, &Hook_LowerPipboy, LowerPipboyOriginal, "LowerPipboy");

@@ -48,6 +48,7 @@
 #include <RE/T/TESObjectREFR.h>
 #include <Scaleform/P/Ptr.h>
 #include "GameForms.h"
+#include "Menus/Workbench_Additions.h"
 
 void GFxUtilities::SetScaleformValue(Scaleform::GFx::Value* dst, const char* name, Scaleform::GFx::Value value)
 {
@@ -156,6 +157,9 @@ namespace InventoryUtils
 	{
 		auto examineMenu = RE::UI::GetSingleton()->GetMenu<RE::ExamineMenu>();
 		std::uint32_t selectedIndex = examineMenu->GetSelectedIndex();
+
+		if (selectedIndex >= examineMenu->invInterface.stackedEntries.size())
+			selectedIndex = 0;
 
 		if (!examineMenu->invInterface.entriesInvalid && (selectedIndex & 0x80000000) == 0 && selectedIndex < examineMenu->invInterface.stackedEntries.size()) {
 			InventoryUserUIInterfaceEntry* inventoryUUIEntry = (examineMenu->invInterface.stackedEntries.data() + selectedIndex);
@@ -530,9 +534,26 @@ void Pipboy_AddCND_ForItemCard::Call(const Params& a_params)
 
 void Workbench_AddCND_ForItemCard::Call(const Params& a_params)
 {
+	auto examineMenu = RE::UI::GetSingleton()->GetMenu<RE::ExamineMenu>();
+	
+	if (!examineMenu) {
+		*a_params.retVal = -1.0f;
+		return;
+	}
+
+	const RE::BGSInventoryItem* currentHoveredItem;
+	if (!examineMenu->workbenchRef || !examineMenu->workbenchRef.get()) {
+		currentHoveredItem = InventoryUtils::GetInventoryItemByHandleID(examineMenu->modItem.id);
+		
+	}
+	else {
+		currentHoveredItem = InventoryUtils::GetInventoryItemWorkbenchByIndex();
+	}
+
+
+
 	Scaleform::GFx::Value handleIDValue;
 	float returnValue = -1.0f;
-	const RE::BGSInventoryItem* currentHoveredItem = InventoryUtils::GetInventoryItemWorkbenchByIndex();
 	if (!currentHoveredItem) {
 		*a_params.retVal = returnValue;
 		return;
@@ -599,6 +620,13 @@ void WorkbenchRepair_CanRepairSelectedCustom::Call(const Params& a_params)
 
 	if (RE::UI::GetSingleton()->GetMenuOpen(menuName)) {
 		returnValue = false;
+	}
+
+	if (returnValue) {
+		//auto choiceData = examineMenu->QCurrentModChoiceData();
+		//if (!choiceData || !choiceData->recipe || !choiceData->recipe->requiredItems) {
+		//	returnValue = false;
+		//}
 	}
 
 	REX::DEBUG(std::format("WorkbenchRepair_CanRepairSelectedCustom - Called. Return Value: {}", returnValue ? 1 : 0).c_str());
@@ -958,4 +986,143 @@ void Workbench_IsWeaponOrArmor::Call(const Params& a_params)
 	default:
 		break;
 	}
+
+	*a_params.retVal = returnValue;
+}
+
+void Workbench_ScrapAllJunk::Call(const Params& a_params)
+{
+	Scaleform::Ptr<RE::ExamineMenu> examineMenu = RE::UI::GetSingleton()->GetMenu<RE::ExamineMenu>();
+	PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk = true;
+	//examineMenu->BuildWeaponScrappingArray();
+	examineMenu->uiMovie->asMovieRoot->Invoke("root.BaseInstance.scrapAllJunkCallbackFromCPP", nullptr, nullptr, 0);
+	
+
+}
+
+void Workbench_HasAnyJunk::Call(const Params& a_params)
+{
+	auto player = RE::PlayerCharacter::GetSingleton();
+
+	bool bHasJunk = false;
+
+	for (std::uint32_t i = 0; i < player->inventoryList->data.size(); i++)
+	{
+		RE::BGSInventoryItem inventoryItem = player->inventoryList->data.at(i);
+
+		if (!inventoryItem.object || !Shared::IsJunkItem(inventoryItem.object) || inventoryItem.IsQuestObject(0))
+			continue;
+
+		switch (inventoryItem.object->GetFormType())
+		{
+		case RE::ENUM_FORM_ID::kWEAP: {
+			if (static_cast<RE::TESObjectWEAP*>(inventoryItem.object)->HasKeyword(Shared::notScrappableKeyword)) {
+				continue;
+			}
+			break;
+		}
+		case RE::ENUM_FORM_ID::kARMO: {
+			if (static_cast<RE::TESObjectARMO*>(inventoryItem.object)->HasKeyword(Shared::notScrappableKeyword)) {
+				continue;
+			}
+			break;
+		}
+		default:
+			break;
+		}
+
+		bHasJunk = true;
+		break;
+	}
+
+	*a_params.retVal = bHasJunk;
+}
+
+void WorkbenchRepair_NoJunk::Call(const Params& a_params)
+{
+	RE::GameSettingCollection* gameSettingCollection = RE::GameSettingCollection::GetSingleton();
+	RE::SendHUDMessage::ShowHUDMessage("You don't have any junk to scrap!", nullptr, true, true);
+}
+
+void OnEscapePress::Call(const Params& a_params)
+{
+	REX::DEBUG("this.BGSCodeObj.OnEscapePress");
+	Scaleform::Ptr<RE::ExamineMenu> examineMenu = RE::UI::GetSingleton()->GetMenu<RE::ExamineMenu>();
+	if (examineMenu)
+	{
+		REX::DEBUG("Examine menu!");
+		examineMenu->repairing = false;
+		
+	}
+	PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk = false;
+}
+
+void Workbench_HasAnyJunkExamine::Call(const Params& a_params)
+{
+	if (!PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk) {
+		*a_params.retVal = false;
+		return;
+	}
+
+	auto player = RE::PlayerCharacter::GetSingleton();
+
+	bool bHasJunk = false;
+
+	for (std::uint32_t i = 0; i < player->inventoryList->data.size(); i++)
+	{
+		RE::BGSInventoryItem inventoryItem = player->inventoryList->data.at(i);
+
+		if (!inventoryItem.object || !Shared::IsJunkItem(inventoryItem.object) || inventoryItem.IsQuestObject(0))
+			continue;
+
+		switch (inventoryItem.object->GetFormType())
+		{
+		case RE::ENUM_FORM_ID::kWEAP: {
+			if (static_cast<RE::TESObjectWEAP*>(inventoryItem.object)->HasKeyword(Shared::notScrappableKeyword)) {
+				continue;
+			}
+			break;
+		}
+		case RE::ENUM_FORM_ID::kARMO: {
+			if (static_cast<RE::TESObjectARMO*>(inventoryItem.object)->HasKeyword(Shared::notScrappableKeyword)) {
+				continue;
+			}
+			break;
+		}
+		default:
+			break;
+		}
+
+
+		bHasJunk = true;
+		break;
+	}
+
+	*a_params.retVal = bHasJunk;
+}
+
+void Workbench_CompleteScrapAllJunk::Call(const Params& a_params)
+{
+	/*
+	auto player = RE::PlayerCharacter::GetSingleton();
+	RE::UIMessageQueue* uiMessageQueue = RE::UIMessageQueue::GetSingleton();
+	uiMessageQueue->AddMessage("ExamineConfirmMenu", RE::UI_MESSAGE_TYPE::kHide);
+
+	Scaleform::Ptr<RE::ExamineMenu> a_this = RE::UI::GetSingleton()->GetMenu<RE::ExamineMenu>();
+
+
+	for (auto it = a_this->scrappingArray.begin(); it != a_this->scrappingArray.end(); ++it) {
+		player->inventoryList->AddItem2(it->first, it->second, );
+	}
+
+	RE::SendHUDMessage::ShowHUDMessage("All junk items were scrapped!", "OBJLunchboxKidsRobotBuild", false, true);
+
+	PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk = false;
+	a_this->uiMovie->asMovieRoot->Invoke("root.BaseInstance.UpdateButtons", nullptr, nullptr, 0);
+	*/
+}
+
+void Workbench_IsInAllJunk::Call(const Params& a_params)
+{
+	*a_params.retVal = PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk;
 }

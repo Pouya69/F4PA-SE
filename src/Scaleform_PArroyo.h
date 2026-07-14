@@ -242,7 +242,53 @@ public:
     virtual void Call(const Params& a_params);
 };
 
+class Workbench_ScrapAllJunk : public Scaleform::GFx::FunctionHandler
+{
+public:
 
+    virtual void Call(const Params& a_params);
+};
+
+class Workbench_CompleteScrapAllJunk : public Scaleform::GFx::FunctionHandler
+{
+public:
+
+    virtual void Call(const Params& a_params);
+};
+
+class Workbench_HasAnyJunk : public Scaleform::GFx::FunctionHandler
+{
+public:
+
+    virtual void Call(const Params& a_params);
+};
+
+class Workbench_HasAnyJunkExamine : public Scaleform::GFx::FunctionHandler
+{
+public:
+
+    virtual void Call(const Params& a_params);
+};
+
+class Workbench_IsInAllJunk : public Scaleform::GFx::FunctionHandler
+{
+public:
+
+    virtual void Call(const Params& a_params);
+};
+
+class WorkbenchRepair_NoJunk : public Scaleform::GFx::FunctionHandler
+{
+public:
+
+    virtual void Call(const Params& a_params);
+};
+
+class OnEscapePress : public Scaleform::GFx::FunctionHandler
+{
+public:
+    virtual void Call(const Params& a_params);
+};
 
 class HUD_GetCurrentCondition : public Scaleform::GFx::FunctionHandler {
     virtual void Call(const Params& a_params);

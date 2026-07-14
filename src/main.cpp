@@ -146,8 +146,10 @@ bool InitializeSharedGameVariables()
 		return false;
 	}
 
+
 	InitializeGameVariables(dataHandler, MOD_ESM);
 
+	Shared::InitializeSharedForms(dataHandler);
 	LOG_INFO("All variables initialized.");
 
 

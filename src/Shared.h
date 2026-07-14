@@ -39,7 +39,11 @@ namespace Shared {
 
 	extern RE::TESObjectMISC* repairKit;
 
+	extern RE::BGSKeyword* notScrappableKeyword;
+
 	void InitializeSharedForms(RE::TESDataHandler* dataHandler);
+
+	bool IsJunkItem(RE::TESBoundObject* obj);
 	
 	template<typename T>
 	bool RegisterFunction(Scaleform::GFx::Value* a_dest, Scaleform::Ptr<Scaleform::GFx::ASMovieRootBase> a_movieRoot, const char* a_func_name) {
