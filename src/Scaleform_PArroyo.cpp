@@ -643,6 +643,7 @@ void ScaleformVisitMembersFunction(const char* chars, const Scaleform::GFx::Valu
 void WorkbenchRepair_RepairSelectedCustom::Call(const Params& a_params)
 {
 	auto examineMenu = RE::UI::GetSingleton()->GetMenu<RE::ExamineMenu>();
+	PArroyo_Menus::Workbench_Additions::currentIndex = examineMenu->GetSelectedIndex();
 	examineMenu->repairing = true;
 	examineMenu->TryCreate();
 	
@@ -896,7 +897,7 @@ void WorkbenchRepair_RepairSelected_RepairKit::Call(const Params& a_params)
 					{
 						// TODO - Check for 'Master Mechanic', if player has the perk, repair amount is set to 100% instead of scaling with repair skill.
 						float repairSkill = playerCharacter->GetActorValue(*PA_Skills.Repair);
-						float repairAmount = 0.2f + 0.3f * (repairSkill / 100.0f); // Repair amount scales from 20% at 0 repair skill to 50% at 100 repair skill.
+						float repairAmount = Shared::repairKitBaseRepair->GetValue() + Shared::repairKitSkillMutliplier->GetValue() * (repairSkill / 100.0f); // Repair amount scales from 20% at 0 repair skill to 50% at 100 repair skill.
 
 						if (stack->extra->GetHealthPerc() + repairAmount > 1.0f)
 						{

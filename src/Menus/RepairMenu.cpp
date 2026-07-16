@@ -943,7 +943,8 @@ void PArroyo_Menus::RepairMenu::RepairMenuFunctions::GiveCapsToVendor(int caps)
 		return;
 
 	auto vm = RE::GameVM::GetSingleton()->GetVM();
-	vm->DispatchStaticCall<RE::Actor*, std::uint32_t>("TCW:PArroyo", "GiveCapsToVendor", NULL, myCurrentVendor, caps);
+	// @TODO: in PArroyo:PArroyo script add the method.
+	vm->DispatchStaticCall<RE::Actor*, std::uint32_t>("PArroyo:PArroyo", "GiveCapsToVendor", NULL, myCurrentVendor, caps);
 }
 
 bool PArroyo_Menus::RepairMenu::RepairMenuFunctions::RepairItem(PArroyo::ItemDegradation::WeaponConditionData myWeaponData, float newCondition)

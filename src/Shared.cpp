@@ -41,6 +41,8 @@
 #include <RE/E/ENUM_FORM_ID.h>
 #include <RE/T/TESForm.h>
 #include "Prisma/PrismaUI_F4_API.h"
+#include "Prisma/Highwayman_Map.h"
+#include "ItemDegradation.h"
 
 namespace Shared {
 	PRISMA_UI_API::IVPrismaUI4* prisma_api = nullptr;
@@ -61,6 +63,23 @@ namespace Shared {
 
 	RE::BGSKeyword* notScrappableKeyword;
 
+	RE::TESGlobal* repairKitBaseRepair;
+	RE::TESGlobal* repairKitSkillMutliplier;
+
+	RE::TESGlobal* workbenchRepairSkillEffect;
+
+	std::unordered_map<std::string, RE::TESWorldSpace*> HighwaymanWorldspacesMap;
+
+	std::unordered_map<std::string, RE::BGSLocation*> HighwaymanLocationsMap;
+
+	RE::BGSListForm* LocationsMapHighwaymanList;
+
+	RE::BGSListForm* WeaponRecipesRepairList;
+	RE::BGSListForm* ArmorRecipesRepairList;
+
+	std::unordered_map<const RE::TESObjectWEAP*, const RE::BGSConstructibleObject*> weaponToCOBJ_Map;
+	std::unordered_map<const RE::TESObjectARMO*, const RE::BGSConstructibleObject*> armorToCOBJ_Map;
+
 	void InitializeSharedForms(RE::TESDataHandler* dataHandler)
 	{
 		crWeaponRanged = dataHandler->LookupForm<RE::BGSKeyword>(0x189348, "Fallout4.esm");
@@ -75,6 +94,134 @@ namespace Shared {
 
 		notScrappableKeyword = dataHandler->LookupForm<RE::BGSKeyword>(0x005477, CURRENT_ESP);
 
+		repairKitBaseRepair = dataHandler->LookupForm<RE::TESGlobal>(0x005E02, CURRENT_ESP);
+		repairKitSkillMutliplier = dataHandler->LookupForm<RE::TESGlobal>(0x005E03, CURRENT_ESP);
+		workbenchRepairSkillEffect = dataHandler->LookupForm<RE::TESGlobal>(0x005E04, CURRENT_ESP);
+
+		WeaponRecipesRepairList = dataHandler->LookupForm<RE::BGSListForm>(0x00D035, CURRENT_ESP);
+		ArmorRecipesRepairList = dataHandler->LookupForm< RE::BGSListForm>(0x00D036, CURRENT_ESP);
+
+		InitializeArmorAndWeapon_COBJs();
+
+		PArroyo::Highwayman::InitializeHighwaymanMapLocations();
+
+
+	}
+
+	const RE::BGSConstructibleObject* GetCOBJ_FromWeapon(const RE::TESObjectWEAP* weaponObj)
+	{
+		return weaponToCOBJ_Map.contains(weaponObj) ? weaponToCOBJ_Map.at(weaponObj) : nullptr;
+	}
+
+	const RE::BGSConstructibleObject* GetCOBJ_FromArmor(const RE::TESObjectARMO* armorObj)
+	{
+		return armorToCOBJ_Map.contains(armorObj) ? armorToCOBJ_Map.at(armorObj) : nullptr;
+	}
+
+	void ApplyFormulaForRepairRequirements(const RE::BSTArray<RE::ExamineMenu::ModChoiceData>& modArray, const RE::ExtraDataList* extraData,
+		RE::BSTArray<RE::BSTTuple<RE::TESForm*, RE::BGSTypedFormValuePair::SharedVal>>& recipeReqItems, RE::BSTArray<RE::BSTTuple<RE::TESForm*,
+		RE::BGSTypedFormValuePair::SharedVal>>& reqItems, const float currentCondition, const float CurrentRepairSkill)
+	{
+		const std::uint32_t repairSkillReduction = floor(CurrentRepairSkill / workbenchRepairSkillEffect->GetValue());
+		std::uint32_t i = 0;
+
+		// auto vm = RE::GameVM::GetSingleton()->GetVM();
+		
+		std::vector<RE::TESObjectMISC*> mods;
+
+		
+		
+
+		auto* player = RE::PlayerCharacter::GetSingleton();
+
+		// We first add the mods if any
+		RE::BGSObjectInstanceExtra* instExtra = extraData->GetByType<RE::BGSObjectInstanceExtra>();
+		if (instExtra && player && player->inventoryList) {
+			for (auto& idx : instExtra->GetIndexData()) {
+				// idx.objectID is the OMOD's raw FormID — resolve it to the real form
+				auto mod = RE::TESForm::GetFormByID<RE::BGSMod::Attachment::Mod>(idx.objectID);
+				for (const auto& modInModArray : modArray) {
+					if (modInModArray.mod->GetFormID() == mod->GetFormID()) {
+
+						for (auto needed = modInModArray.recipe->requiredItems->begin(); needed != modInModArray.recipe->requiredItems->end(); ++needed) {
+							auto finalTuple = RE::BSTTuple<RE::TESForm*, RE::BGSTypedFormValuePair::SharedVal>(needed->first, needed->second);
+							reqItems.push_back(finalTuple);
+						}
+					}
+				}
+			}
+		}
+
+		
+		
+		
+
+		for (auto needed = recipeReqItems.begin(); needed != recipeReqItems.end(); ++needed) {
+
+			RE::BSTTuple<RE::TESForm*, RE::BGSTypedFormValuePair::SharedVal>* neededCopy = new RE::BSTTuple<RE::TESForm*, RE::BGSTypedFormValuePair::SharedVal>(needed->first, needed->second.i);
+
+			RE::BSTTuple<RE::TESForm*, RE::BGSTypedFormValuePair::SharedVal>* foundInMod = nullptr;
+			int ii = 0;
+			for (auto reqInList = reqItems.begin(); reqInList != reqItems.end(); ++reqInList) {
+				if ((std::uint32_t)reqInList->first->GetFormID() == (std::uint32_t)needed->first->GetFormID()) {
+					foundInMod = reqInList;
+					neededCopy->second.i += (reqInList->second.i * (1.0f - currentCondition));
+					break;
+				}
+				ii++;
+			}
+
+
+			const std::uint32_t oldCount = neededCopy->second.i;
+
+			if (repairSkillReduction > 1) {
+				int newCount = neededCopy->second.i;
+				newCount -= repairSkillReduction;
+				neededCopy->second.i = std::max(newCount, 1);
+			}
+
+			// Condition Reduction
+			neededCopy->second.i = (std::uint32_t) std::max(neededCopy->second.i * (1.0f - currentCondition), 1.0f);
+
+			auto finalTuple = RE::BSTTuple<RE::TESForm*, RE::BGSTypedFormValuePair::SharedVal>(neededCopy->first, neededCopy->second.i);
+			if (foundInMod) {
+				reqItems[ii] = finalTuple;
+			}
+			else {
+				reqItems.push_back(finalTuple);
+			}
+
+
+
+			
+
+			
+
+
+			//(*currentModChoiceData->recipe->requiredItems)[i] = *neededCopy;
+			// needed.second.f = max((int)needed.second.f / repairSkillReduction, 1);
+			// (*currentModChoiceData->recipe->requiredItems)[i] = needed;
+
+			REX::DEBUG(std::format("RepairReduction - Comp from {} to {}. Skill Reduction: {}. With mods? {}", oldCount, neededCopy->second.i, repairSkillReduction, foundInMod ? 1 : 0).c_str());
+			i++;
+		}
+
+
+		
+	}
+
+	
+	void InitializeArmorAndWeapon_COBJs()
+	{
+		for (const auto objInList : WeaponRecipesRepairList->arrayOfForms) {
+			const RE::BGSConstructibleObject* constructible = static_cast<RE::BGSConstructibleObject*>(objInList);
+			weaponToCOBJ_Map.emplace(static_cast<RE::TESObjectWEAP*>(constructible->GetCreatedItem()), constructible);
+		}
+
+		for (const auto objInList : ArmorRecipesRepairList->arrayOfForms) {
+			const RE::BGSConstructibleObject* constructible = static_cast<RE::BGSConstructibleObject*>(objInList);
+			armorToCOBJ_Map.emplace(static_cast<RE::TESObjectARMO*>(constructible->GetCreatedItem()), constructible);
+		}
 	}
 
 	bool IsJunkItem(RE::TESBoundObject* obj)
@@ -88,7 +235,15 @@ namespace Shared {
 		if (!obj || obj->formType.get() != RE::ENUM_FORM_ID::kMISC) return false;
 		auto* misc = static_cast<RE::TESObjectMISC*>(obj);
 		if ((misc->formID & 0x00FFFFFFu) == 0x0000000Fu || (misc->formID & 0x00FFFFFFu) == 0x0000000Au || misc->HasKeyword(Shared::notScrappableKeyword)) return false;  // caps or bobby pins, never
-		return misc->componentData && misc->componentData->size() != 0 && (std::uint32_t)misc->componentData->at(0).first->formID != (std::uint32_t)misc->formID && (std::int32_t)misc->GetFormType() != (std::int32_t)RE::ENUM_FORM_ID::kCMPO;
+		if (misc->componentData && !misc->componentData->empty()) {
+			auto compObj = static_cast<RE::TESObjectMISC*>(misc->componentData->at(0).first);
+			if (compObj == nullptr || !compObj->componentData || !compObj->componentData->empty())
+				return false;
+
+			return (std::int32_t)misc->GetFormType() != (std::int32_t)RE::ENUM_FORM_ID::kCMPO;
+		}
+
+		return false;
 	}
 
 	std::uint32_t GetAvailableComponentCount(RE::BGSInventoryList* a_list, RE::TESForm* a_form)

@@ -8,6 +8,8 @@
 
 namespace PArroyo_Menus {
 	namespace Workbench_Additions {
+		extern bool formulaApplied = false;
+		std::uint32_t currentIndex;
 		bool bIsScrappingAllJunk = false;
 	}
 }

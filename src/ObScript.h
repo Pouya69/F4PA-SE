@@ -17,6 +17,10 @@
 #include <RE/P/PlayerCharacter.h>
 #include <format>
 #include "GameForms.h"
+#include "Prisma/Highwayman_Map.h"
+#include "ItemDegradation.h"
+#include "Scaleform_PArroyo.h"
+#include "Shared.h"
 
 namespace PArroyo {
 	namespace ObScript {
@@ -108,6 +112,176 @@ namespace PArroyo {
 
 			static constexpr auto LONG_NAME = "ShowPlayerSkills"sv;
 			static constexpr auto SHORT_NAME = "shpk"sv;
+		};
+
+		class ModCurrentWeaponCondition {
+		public:
+			static void Install() {
+				const auto functions = RE::SCRIPT_FUNCTION::GetConsoleFunctions();
+				const auto it = std::find_if(
+					functions.begin(),
+					functions.end(),
+					[&](auto&& a_elem) {
+						return _stricmp(a_elem.functionName, "SaveDebugTextPages") == 0;
+					});
+
+				if (it == functions.end()) {
+					LOG_WARNING("Failed to reigster console command: 'SaveDebugTextPages'");
+					return;
+				}
+
+				static std::array params{
+					RE::SCRIPT_PARAMETER{"SkillName", RE::SCRIPT_PARAM_TYPE::kInt, true},
+				};
+
+				*it = RE::SCRIPT_FUNCTION{ LONG_NAME.data(), SHORT_NAME.data(), it->output };
+				it->helpString = HelpString().data();
+				it->referenceFunction = false;
+				it->paramCount = static_cast<std::uint16_t>(params.size());
+				it->parameters = params.data();
+				it->executeFunction = Execute;
+
+				LOG_INFO("Registered 'SaveDebugTextPages' console command");
+			}
+
+		private:
+			static bool Execute(
+				const RE::SCRIPT_PARAMETER* a_parameters,
+				const char* a_compiledParams,
+				RE::TESObjectREFR* a_refObject,
+				RE::TESObjectREFR* a_container,
+				RE::Script* a_script,
+				RE::ScriptLocals* a_scriptLocals,
+				float&,
+				std::uint32_t& a_offset)
+			{
+				int weaponCND = 0;
+
+				auto paramsParsed = RE::Script::ParseParameters(
+					a_parameters,
+					a_compiledParams,
+					a_offset,
+					a_refObject,
+					a_container,
+					a_script,
+					a_scriptLocals,
+					&weaponCND
+				);
+
+				if (!paramsParsed || weaponCND < 0 || weaponCND > 100) {
+					LOG_TO_CONSOLE("Mod the current weapon's condition. mwc AMOUNT [0,100]\n");
+					return true;
+				}
+
+				auto player = RE::PlayerCharacter::GetSingleton();
+				auto currentWeapon = InventoryUtils::GetCurrentEquippedWeapon(player);
+
+				if (!currentWeapon) {
+					LOG_TO_CONSOLE("No weapon equipped! equip a weapon.");
+					return true;
+				}
+
+				auto weaponData = ItemDegradation::WeaponConditionData(player, currentWeapon->object, currentWeapon->stackData->extra.get());
+
+				const float previousHealth = weaponData.extraData->GetHealthPerc();
+
+				weaponData.extraData->SetHealthPerc(weaponCND / 100.0f);
+
+				const float conditionValue = weaponData.extraData->GetHealthPerc();
+
+				RE::BSFixedString menuString("HUDMenu");
+				if (RE::UI::GetSingleton()->GetMenuOpen(menuString)) {
+
+					auto myHudMenu = RE::UI::GetSingleton()->GetMenu(menuString).get();
+					Scaleform::GFx::Value myConditionValue[1];
+
+
+					myConditionValue[0] = Scaleform::GFx::Value(conditionValue);
+
+					const bool result = myHudMenu->uiMovie->asMovieRoot->Invoke("root.CWHUD_loader.content.SetCondition", nullptr, myConditionValue, 1);
+
+				}
+
+				LOG_TO_CONSOLE(std::format("Previous Condition: {}, New Condition: {}", previousHealth, conditionValue).c_str());
+
+				return true;
+			}
+
+			[[nodiscard]] static const std::string& HelpString()
+			{
+				static auto help = []()
+					{
+						std::string buf;
+						buf += "Mod the current weapon's condition. mwc AMOUNT\n"sv;
+						return buf;
+					}();
+				return help;
+			}
+
+			static constexpr auto LONG_NAME = "ModWeaponCondition"sv;
+			static constexpr auto SHORT_NAME = "mwc"sv;
+		};
+
+		class ShowHighwaymanMapCommand {
+		public:
+			static void Install() {
+				const auto functions = RE::SCRIPT_FUNCTION::GetConsoleFunctions();
+				const auto it = std::find_if(
+					functions.begin(),
+					functions.end(),
+					[&](auto&& a_elem) {
+						return _stricmp(a_elem.functionName, "TestPath") == 0;
+					});
+
+				if (it == functions.end()) {
+					LOG_WARNING("Failed to reigster console command: 'TestPath'");
+					return;
+				}
+
+				*it = RE::SCRIPT_FUNCTION{ LONG_NAME.data(), SHORT_NAME.data(), it->output };
+				it->helpString = HelpString().data();
+				it->referenceFunction = false;
+				//it->paramCount = static_cast<std::uint16_t>(params.size());
+				//it->parameters = params.data();
+				it->executeFunction = Execute;
+
+				LOG_INFO("Registered 'TestPath' console command");
+			}
+
+		private:
+			static bool Execute(
+				const RE::SCRIPT_PARAMETER* a_parameters,
+				const char* a_compiledParams,
+				RE::TESObjectREFR* a_refObject,
+				RE::TESObjectREFR* a_container,
+				RE::Script* a_script,
+				RE::ScriptLocals* a_scriptLocals,
+				float&,
+				std::uint32_t& a_offset)
+			{
+				
+				if (PArroyo::Highwayman::g_visible)
+					PArroyo::Highwayman::CloseHighwayman();
+				else
+					PArroyo::Highwayman::OpenUpHighwaymanMap();
+
+				
+				return true;
+			}
+
+			[[nodiscard]] static const std::string& HelpString()
+			{
+				static auto help = []()
+					{
+						std::string buf;
+						buf += "Show the highwayman Prisma app!"sv;
+						return buf;
+					}();
+				return help;
+			}
+
+			static constexpr auto LONG_NAME = "ShowHighwayMan"sv;
+			static constexpr auto SHORT_NAME = "shhwm"sv;
 		};
 
 		class ModPAValueCommand {
@@ -219,119 +393,13 @@ namespace PArroyo {
 			static constexpr auto SHORT_NAME = "mcwv"sv;
 		};
 
-		class ModCurrentWeaponCommand {
-		public:
-			static void Install() {
-				const auto functions = RE::SCRIPT_FUNCTION::GetConsoleFunctions();
-				const auto it = std::find_if(
-					functions.begin(),
-					functions.end(),
-					[&](auto&& a_elem) {
-						return _stricmp(a_elem.functionName, "ToggleEventLog") == 0;
-					});
-
-				if (it == functions.end()) {
-					LOG_WARNING("Failed to reigster console command: 'ToggleEventLog'");
-					return;
-				}
-
-				static std::array params{
-					RE::SCRIPT_PARAMETER{"skillName", RE::SCRIPT_PARAM_TYPE::kChar, true}
-				};
-
-				*it = RE::SCRIPT_FUNCTION{ LONG_NAME.data(), SHORT_NAME.data(), it->output };
-				it->helpString = HelpString().data();
-				it->referenceFunction = false;
-				it->paramCount = static_cast<std::uint16_t>(params.size());
-				it->parameters = params.data();
-				it->executeFunction = Execute;
-
-				LOG_INFO("Registered 'ToggleEventLog' console command");
-			}
-
-		private:
-			static bool Execute(
-				const RE::SCRIPT_PARAMETER* a_parameters,
-				const char* a_compiledParams,
-				RE::TESObjectREFR* a_refObject,
-				RE::TESObjectREFR* a_container,
-				RE::Script* a_script,
-				RE::ScriptLocals* a_scriptLocals,
-				float&,
-				std::uint32_t& a_offset)
-			{
-				float karmaModAmount = 0;
-
-				auto paramsParsed = RE::Script::ParseParameters(
-					a_parameters,
-					a_compiledParams,
-					a_offset,
-					a_refObject,
-					a_container,
-					a_script,
-					a_scriptLocals,
-					&karmaModAmount
-				);
-
-				if (karmaModAmount < 0.0f || karmaModAmount > 100.0f) {
-					LOG_TO_CONSOLE("Weapon Condition has to be from [0, 100]\n");
-					// CW_SkillsPapyrus::DEBUG_LogSkillsToConsole_Papyrus(std::monostate(), RE::PlayerCharacter::GetSingleton());
-					return true;
-				}
-
-				RE::TESObjectWEAP* weaponObject = nullptr;
-				RE::ExtraDataList* extraData = nullptr;
-
-				auto player = RE::PlayerCharacter::GetSingleton();
-
-				for (RE::BGSInventoryItem& inventoryItem : player->inventoryList->data) {
-					if (!inventoryItem.IsEquipped(0))
-						continue;
-					if (!inventoryItem.object || inventoryItem.object->GetFormType() != RE::ENUM_FORM_ID::kWEAP)
-						continue;
-
-					auto weaponObj = static_cast<RE::TESObjectWEAP*>(inventoryItem.object);
-
-					if (weaponObj) {
-						weaponObject = weaponObj;
-						extraData = inventoryItem.stackData->extra.get();
-						break;
-					}
-
-				}
-
-				if (!weaponObject || !extraData) {
-					return true;
-				}
-
-				const float oldKarma = extraData->GetHealthPerc();
-				double finalP = karmaModAmount / 100.0f;
-				extraData->SetHealthPerc(finalP);
-
-
-				LOG_TO_CONSOLE(std::format("Old Condition: {}, New Condition: {}", oldKarma * 100, extraData->GetHealthPerc()).c_str());
-				return true;
-			}
-
-			[[nodiscard]] static const std::string& HelpString()
-			{
-				static auto help = []()
-					{
-						std::string buf;
-						buf += "Mods the current weapon condition."sv;
-						return buf;
-					}();
-				return help;
-			}
-
-			static constexpr auto LONG_NAME = "ModCurrentWeaponCondition"sv;
-			static constexpr auto SHORT_NAME = "mcwc"sv;
-		};
 
 		static void Install() {
+
 			ModPAValueCommand::Install();
 			ShowPlayerSkills::Install();
-			ModCurrentWeaponCommand::Install();
+			ModCurrentWeaponCondition::Install();
+			ShowHighwaymanMapCommand::Install();
 		}
 	}
 }

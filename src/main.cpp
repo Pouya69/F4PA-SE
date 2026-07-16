@@ -169,6 +169,8 @@ void InitializePrisma() {
 		REX::WARN("PrismaUI V4 Not Found");
 		return;
 	}
+
+	REX::DEBUG("PrismaUI V4 Is there.");
 }
 
 void GameDataLoaded()
@@ -223,16 +225,16 @@ void F4SEMessageCallback(F4SE::MessagingInterface::Message* myMessage) {
 			GameDataReady();
 			break;
 
-		case F4SE::MessagingInterface::kGameLoaded:
-			GameDataLoaded();
-			break;
-
 		case F4SE::MessagingInterface::kPostLoadGame:
 			PostLoadGame();
 			break;
 
 		case F4SE::MessagingInterface::kNewGame:
 			NewGame();
+			break;
+
+		case F4SE::MessagingInterface::kGameLoaded:
+			GameDataLoaded();
 			break;
 		default:
 			break;

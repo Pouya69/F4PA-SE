@@ -477,7 +477,6 @@ namespace PArroyo {
 					{
 						RE::InventoryUserUIInterfaceEntry * inventoryUUIEntry = (a_this->invInterface.stackedEntries.data() + selectedIndex);
 						const RE::BGSInventoryItem* inventoryItem = RE::BGSInventoryInterface::GetSingleton()->RequestInventoryItem(inventoryUUIEntry->invHandle.id);
-
 						fullName = inventoryItem->GetDisplayFullName(inventoryUUIEntry->stackIndex.at(0));
 					}
 				}
@@ -565,6 +564,23 @@ namespace PArroyo {
 			if (!PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk) {
 				// Vanilla scrapping.
 				BuildWeaponScrappingArrayOriginal(a_this);
+
+				std::uint32_t selectedIndex = a_this->GetSelectedIndex();
+				if (!a_this->invInterface.entriesInvalid && (selectedIndex & 0x80000000) == 0 && selectedIndex < a_this->invInterface.stackedEntries.size())
+				{
+					RE::InventoryUserUIInterfaceEntry* inventoryUUIEntry = (a_this->invInterface.stackedEntries.data() + selectedIndex);
+					const RE::BGSInventoryItem* inventoryItem = RE::BGSInventoryInterface::GetSingleton()->RequestInventoryItem(inventoryUUIEntry->invHandle.id);
+					if (inventoryItem) {
+						
+						if (inventoryItem->stackData->extra->GetHealthPerc() >= 0) {
+							const float oneMinusCND = inventoryItem->stackData->extra->GetHealthPerc();
+							for (std::uint32_t i = 0; i < a_this->scrappingArray.size(); i++) {
+								a_this->scrappingArray[i].second = a_this->scrappingArray[i].second * oneMinusCND;
+							}
+						}
+					}
+				}
+
 				return;
 			}
 
@@ -693,7 +709,17 @@ namespace PArroyo {
 
 					if (inventoryItem)
 					{
-						BSTArray<BSTTuple<TESForm*, BGSTypedFormValuePair::SharedVal>>* requiredItems = a_this->QCurrentModChoiceData()->recipe->requiredItems;
+						auto modChoice = a_this->QCurrentModChoiceData();
+
+
+						const float currentCondition = inventoryItem->GetStackByID(inventoryUUIEntry->stackIndex.at(0))->extra->GetHealthPerc();
+						auto player = RE::PlayerCharacter::GetSingleton();
+						const float repairSkill = player->GetActorValue(*PA_Skills.Repair);
+
+						modChoice->requiredItems->clear();
+						Shared::ApplyFormulaForRepairRequirements(examineMenu->modChoiceArray, inventoryItem->stackData->extra.get(), *modChoice->recipe->requiredItems, *modChoice->requiredItems, currentCondition, repairSkill);
+
+						BSTArray<BSTTuple<TESForm*, BGSTypedFormValuePair::SharedVal>>* requiredItems = modChoice->requiredItems;
 						if (requiredItems)
 						{
 							RepairFailureCallback* repairFailureCallback = new RepairFailureCallback(examineMenu.get());
@@ -774,54 +800,67 @@ namespace PArroyo {
 					}
 					else
 					{
-						RE::WorkbenchMenuBase::ModChoiceData* currentModChoiceData = (a_this->modChoiceArray.data() + modChoiceIndex);
 
-						if (!currentModChoiceData->recipe->requiredItems) {
-							return 0;
-						}
 
-						// Remove any possible required perks, as we don't take that into account when repairing.
-						if (currentModChoiceData->requiredPerks.size() > 0)
-						{
-							currentModChoiceData->requiredPerks.clear();
-						}
+						RE::WorkbenchMenuBase::ModChoiceData* currentModChoiceDatasss = (a_this->modChoiceArray.data() + modChoiceIndex);
 
-						// Remove any possible conditions on the recipe, as we don't take that into account when repairing.
-						currentModChoiceData->recipe->conditions.ClearAllConditionItems();
+						RE::WorkbenchMenuBase::ModChoiceData* currentModChoiceData = new RE::WorkbenchMenuBase::ModChoiceData();
+						currentModChoiceData->index = currentModChoiceDatasss->index;
+						currentModChoiceData->mod = currentModChoiceDatasss->mod;
+						currentModChoiceData->object = currentModChoiceDatasss->object;
+						currentModChoiceData->rank = currentModChoiceDatasss->rank;
+						currentModChoiceData->recipe = currentModChoiceDatasss->recipe;
+						currentModChoiceData->requiredItems = new RE::BSTArray<RE::BSTTuple<RE::TESForm*, RE::BGSTypedFormValuePair::SharedVal>>();
+						currentModChoiceData->requiredPerks = RE::BSTArray<RE::BSTTuple<RE::BGSPerk*, std::uint32_t>>();
 
-						const float repairSkill = RE::PlayerCharacter::GetSingleton()->GetActorValue(*PA_Skills.Repair);
-						const std::uint32_t repairSkillReduction = floor(repairSkill / 20);
+
+
+						
+
+
 
 						Scaleform::Ptr<RE::ExamineMenu> examineMenu = RE::UI::GetSingleton()->GetMenu<RE::ExamineMenu>();
-						std::uint32_t selectedIndex = examineMenu->GetSelectedIndex();
+						std::uint32_t selectedIndex = PArroyo_Menus::Workbench_Additions::currentIndex;
 						
 						if (!examineMenu->invInterface.entriesInvalid && (selectedIndex & 0x80000000) == 0 && selectedIndex < examineMenu->invInterface.stackedEntries.size())
 						{
+
 							RE::InventoryUserUIInterfaceEntry* inventoryUUIEntry = (examineMenu->invInterface.stackedEntries.data() + selectedIndex);
 							const RE::BGSInventoryItem* inventoryItem = RE::BGSInventoryInterface::GetSingleton()->RequestInventoryItem(inventoryUUIEntry->invHandle.id);
+							
+							const RE::BGSConstructibleObject* COBJGrabbed = nullptr;
+							if (inventoryItem->object->GetFormType() == RE::ENUM_FORM_ID::kWEAP) {
+								COBJGrabbed = Shared::GetCOBJ_FromWeapon(static_cast<RE::TESObjectWEAP*>(inventoryItem->object));
+							}
+							else if (inventoryItem->object->GetFormType() == RE::ENUM_FORM_ID::kARMO) {
+								COBJGrabbed = Shared::GetCOBJ_FromArmor(static_cast<RE::TESObjectARMO*>(inventoryItem->object));
+							}
+
+							if (!COBJGrabbed) {
+								REX::WARN("No COBJ found from object '{}'", inventoryItem->object->GetFormEditorID());
+								return 0;
+							}
+							
+							currentModChoiceData->recipe = COBJGrabbed;
+
+							if (!currentModChoiceData->recipe->requiredItems) {
+
+								return 0;
+							}
+
+							// Remove any possible required perks, as we don't take that into account when repairing.
+							if (!currentModChoiceData->requiredPerks.empty())
+							{
+								currentModChoiceData->requiredPerks.clear();
+							}
+
+							// Remove any possible conditions on the recipe, as we don't take that into account when repairing.
+							currentModChoiceData->recipe->conditions.ClearAllConditionItems();
 
 							const float currentCondition = inventoryItem->GetStackByID(inventoryUUIEntry->stackIndex.at(0))->extra->GetHealthPerc();
+							const float repairSkill = RE::PlayerCharacter::GetSingleton()->GetActorValue(*PA_Skills.Repair);
 
-							REX::DEBUG("RepairReduction");
-
-							for (auto needed = currentModChoiceData->recipe->requiredItems->begin(); needed != currentModChoiceData->recipe->requiredItems->end(); ++needed) {
-
-								const std::uint32_t oldCount = needed->second.i;
-
-								if (repairSkillReduction > 1) {
-									int newCount = needed->second.i;
-									newCount -= repairSkillReduction;
-									needed->second.i = max(newCount, 1);
-								}
-								
-
-								needed->second.i = max((std::uint32_t)needed->second.i * (1 - currentCondition), 1);
-								
-								// needed.second.f = max((int)needed.second.f / repairSkillReduction, 1);
-								// (*currentModChoiceData->recipe->requiredItems)[i] = needed;
-
-								// REX::DEBUG(std::format("RepairReduction - Comp1 from {} to {}. Skill Reduction: {}", oldCount, needed.second.i, repairSkillReduction).c_str());
-							}
+							Shared::ApplyFormulaForRepairRequirements(examineMenu->modChoiceArray, inventoryItem->stackData->extra.get(), *currentModChoiceData->recipe->requiredItems, *currentModChoiceData->requiredItems, currentCondition, repairSkill);
 							
 						}
 

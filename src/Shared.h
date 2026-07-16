@@ -21,6 +21,15 @@
 #include <RE/B/BGSInventoryList.h>
 #include <RE/T/TESForm.h>
 #include "Prisma/PrismaUI_F4_API.h"
+#include <unordered_map>
+#include <RE/B/BGSLocation.h>
+#include <RE/B/BSTTuple.h>
+#include <RE/T/TESWorldSpace.h>
+#include <RE/B/BGSConstructibleObject.h>
+#include <RE/B/BGSListForm.h>
+#include <RE/B/BGSTypedFormValuePair.h>
+#include <RE/B/BSTArray.h>
+#include "ItemDegradation.h"
 
 namespace Shared {
 	extern PRISMA_UI_API::IVPrismaUI4* prisma_api;
@@ -40,6 +49,30 @@ namespace Shared {
 	extern RE::TESObjectMISC* repairKit;
 
 	extern RE::BGSKeyword* notScrappableKeyword;
+
+	extern RE::TESGlobal* repairKitBaseRepair;
+	extern RE::TESGlobal* repairKitSkillMutliplier;
+
+	extern RE::TESGlobal* workbenchRepairSkillEffect;
+
+	extern std::unordered_map<std::string, RE::TESWorldSpace*> HighwaymanWorldspacesMap;
+
+	extern std::unordered_map<std::string, RE::BGSLocation*> HighwaymanLocationsMap;
+
+	extern RE::BGSListForm* LocationsMapHighwaymanList;
+
+	extern RE::BGSListForm* WeaponRecipesRepairList;
+	extern RE::BGSListForm* ArmorRecipesRepairList;
+
+	extern std::unordered_map<const RE::TESObjectWEAP*, const RE::BGSConstructibleObject*> weaponToCOBJ_Map;
+	extern std::unordered_map<const RE::TESObjectARMO*, const RE::BGSConstructibleObject*> armorToCOBJ_Map;
+
+	const RE::BGSConstructibleObject* GetCOBJ_FromWeapon(const RE::TESObjectWEAP* weaponObj);
+	const RE::BGSConstructibleObject* GetCOBJ_FromArmor(const RE::TESObjectARMO* armorObj);
+
+	void ApplyFormulaForRepairRequirements(const RE::BSTArray<RE::ExamineMenu::ModChoiceData>& modArray, const RE::ExtraDataList* extraData, RE::BSTArray<RE::BSTTuple<RE::TESForm*, RE::BGSTypedFormValuePair::SharedVal>>& recipeReqItems, RE::BSTArray<RE::BSTTuple<RE::TESForm*, RE::BGSTypedFormValuePair::SharedVal>>& reqItems, const float currentCondition, const float CurrentRepairSkill);
+
+	void InitializeArmorAndWeapon_COBJs();
 
 	void InitializeSharedForms(RE::TESDataHandler* dataHandler);
 

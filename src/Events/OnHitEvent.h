@@ -105,7 +105,7 @@ class OnHitEvent : public RE::BSTEventSink<RE::TESHitEvent> {
 
 		conditionReduction *= (1.0f - reductionPercentFromSkill);
 
-		newHealth = max(currentHealth - conditionReduction, 0.0f);
+		newHealth = std::max(currentHealth - conditionReduction, 0.0f);
 
 		if (newHealth == 0.0f)
 		{
