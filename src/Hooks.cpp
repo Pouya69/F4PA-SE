@@ -131,15 +131,18 @@ namespace PArroyo {
 				}
 
 
-				if (a_boundObject->GetFormType() == RE::ENUM_FORM_ID::kCMPO) {
+				if (a_boundObject->GetFormType() == RE::ENUM_FORM_ID::kCMPO || a_boundObject->GetFormType() == RE::ENUM_FORM_ID::kMISC) {
 					auto player = RE::PlayerCharacter::GetSingleton();
 
 					auto baseComp = Shared::GetBaseComponentFromForm(a_boundObject);
-					std::uint32_t oldCountNew = 0;
-					auto removeData = RE::TESObjectREFR::RemoveItemData(a_boundObject, *a_newCount);
-					player->RemoveItem(removeData);
+					if (baseComp && baseComp->scrapItem) {
+						std::uint32_t oldCountNew = 0;
+						auto removeData = RE::TESObjectREFR::RemoveItemData(a_boundObject, *a_newCount);
+						player->RemoveItem(removeData);
 
-					player->inventoryList->AddItem2(baseComp->scrapItem, *a_newCount);
+						player->inventoryList->AddItem2(baseComp->scrapItem, *a_newCount);
+					}
+					
 					//AddItem_Original(a_this, baseComp->scrapItem, a_stack, &oldCountNew, a_newCount);
 					
 				}
@@ -256,6 +259,7 @@ namespace PArroyo {
 			RE::BGSInventoryItem* inventoryItem = nullptr;
 			int index = 0;
 			RE::TESFormID weaponFormID = a_weapon->object->GetFormID();
+			playerCharacter->inventoryList->rwLock.lock_read();
 			for (RE::BGSInventoryItem& item : playerCharacter->inventoryList->data) {
 				if (item.object->GetFormID() == weaponFormID) {
 					inventoryItem = &item;
@@ -263,6 +267,7 @@ namespace PArroyo {
 				}
 				index++;
 			}
+			playerCharacter->inventoryList->rwLock.unlock_read();
 			if (!inventoryItem) {
 				TESObjectWeaponFireOriginal(a_weapon, a_source, a_equipIndex, a_ammo, a_poiso);
 				return;
@@ -590,6 +595,11 @@ namespace PArroyo {
 							const float oneMinusCND = inventoryItem->stackData->extra->GetHealthPerc();
 							for (std::uint32_t i = 0; i < a_this->scrappingArray.size(); i++) {
 								a_this->scrappingArray[i].second = a_this->scrappingArray[i].second * oneMinusCND;
+								auto baseCompObj = Shared::GetBaseComponentFromForm(a_this->scrappingArray[i].first);
+								if (baseCompObj && baseCompObj->scrapItem) {
+									a_this->scrappingArray[i].first = baseCompObj->scrapItem;
+								}
+								
 							}
 						}
 					}
@@ -602,7 +612,7 @@ namespace PArroyo {
 
 			// Scrap all junk logic.
 			auto player = RE::PlayerCharacter::GetSingleton();
-
+			player->inventoryList->rwLock.lock_read();
 			for (std::uint32_t i = 0; i < player->inventoryList->data.size(); i++)
 			{
 				RE::BGSInventoryItem inventoryItem = player->inventoryList->data.at(i);
@@ -628,6 +638,14 @@ namespace PArroyo {
 						//continue;
 
 					auto boundObj = reinterpret_cast<RE::TESBoundObject*>(it->first);
+
+					auto baseCompObj = Shared::GetBaseComponentFromForm(it->first);
+					if (baseCompObj && baseCompObj->scrapItem) {
+						boundObj = baseCompObj->scrapItem;
+						//a_this->scrappingArray[i].first = baseCompObj;
+					}
+
+					//
 					// REX::DEBUG("BuildWeaponScrappingArray - scrapItem found with count: {}", it->second.i);
 
 					const auto count = it->second.i * inventoryItem.GetCount();
@@ -636,6 +654,7 @@ namespace PArroyo {
 					
 				}
 			}
+			player->inventoryList->rwLock.unlock_read();
 			
 		}
 
@@ -663,6 +682,7 @@ namespace PArroyo {
 
 				if (!Shared::IsJunkItem(a_object)) {
 
+					player->inventoryList->rwLock.lock_read();
 					for (std::uint32_t i = 0; i < player->inventoryList->data.size(); i++)
 					{
 						RE::BGSInventoryItem inventoryItem = player->inventoryList->data.at(i);
@@ -689,10 +709,12 @@ namespace PArroyo {
 						}
 
 						auto removeData = RE::TESObjectREFR::RemoveItemData(inventoryItem.object, inventoryItem.GetCount());
-
+						player->inventoryList->rwLock.unlock_read();
 						player->RemoveItem(removeData);
+						player->inventoryList->rwLock.lock_read();
 
 					}
+					player->inventoryList->rwLock.unlock_read();
 					RE::SendHUDMessage::ShowHUDMessage("All junk items were scrapped!", "OBJLunchboxKidsRobotBuild", false, true);
 					RE::UI::GetSingleton()->GetMenu<RE::ExamineMenu>()->uiMovie->asMovieRoot->Invoke("root.BaseInstance.UpdateButtons", nullptr, nullptr, 0);
 					PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk = false;
@@ -1034,6 +1056,7 @@ namespace PArroyo {
 				if (!Shared::IsJunkItem(a_data.object)) {
 					PArroyo_Menus::Workbench_Additions::bIsScrappingAllJunk = false;
 					auto player = RE::PlayerCharacter::GetSingleton();
+					player->inventoryList->rwLock.lock_read();
 					for (std::uint32_t i = 0; i < player->inventoryList->data.size(); i++)
 					{
 						RE::BGSInventoryItem inventoryItem = player->inventoryList->data.at(i);
@@ -1070,9 +1093,11 @@ namespace PArroyo {
 						
 
 						auto removeData = RE::TESObjectREFR::RemoveItemData(inventoryItem.object, inventoryItem.GetCount());
-
+						player->inventoryList->rwLock.unlock_read();
 						player->RemoveItem(removeData);
+						player->inventoryList->rwLock.lock_read();
 					}
+					player->inventoryList->rwLock.unlock_read();
 					RE::SendHUDMessage::ShowHUDMessage("All junk items were scrapped!", "OBJLunchboxKidsRobotBuild", false, true);
 					RE::UI::GetSingleton()->GetMenu<RE::ExamineMenu>()->uiMovie->asMovieRoot->Invoke("root.BaseInstance.UpdateButtons", nullptr, nullptr, 0);
 
