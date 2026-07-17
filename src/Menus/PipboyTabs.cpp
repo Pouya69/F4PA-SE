@@ -262,42 +262,70 @@ void PArroyo_Menus::PipboyTabs::PopulateKarmaEntry(Scaleform::GFx::Value* myDest
 	int karmaType = -1;
 	std::string myKarmaTitle = "$F4CW_KARMA_";
 	std::string myKarmaDescription = "$F4CW_KARMA_";
-	std::string myKarmaSWFPath = "Components/CapitalWasteland/Karma/Karma_";
+	std::string myKarmaSWFPath = "Components/Vaultboys/PBT/Karma/00PA_KarmaTitle_";
 
-	if (karmaValue < -750)
+	if (karmaValue >= 1000)
 	{
-		karmaType = Karma_VeryEvil;
-		myKarmaTitle += "VeryEvil";
-		myKarmaDescription += "BAD_";
-		myKarmaSWFPath += "VeryEvil.swf";
-	}
-	else if (karmaValue < -250 && karmaValue >= -750)
-	{
-		karmaType = Karma_Evil;
-		myKarmaTitle += "Evil";
-		myKarmaDescription += "BAD_";
-		myKarmaSWFPath += "Evil.swf";
-	}
-	else if (karmaValue < 250 && karmaValue >= -250)
-	{
-		karmaType = Karma_Neutral;
-		myKarmaTitle += "Neutral";
-		myKarmaDescription += "NEUTRAL_";
-		myKarmaSWFPath += "Neutral.swf";
-	}
-	else if (karmaValue < 750 && karmaValue >= 250)
-	{
-		karmaType = Karma_Good;
-		myKarmaTitle += "Good";
-		myKarmaDescription += "GOOD_";
-		myKarmaSWFPath += "Good.swf";
+		karmaType = SaviorOfTheDamned;
+		myKarmaTitle += "SaviorOfTheDamned";
+		myKarmaDescription += "SaviorOfTheDamned_";
+		myKarmaSWFPath += "SaviorOfTheDamned.swf";
 	}
 	else if (karmaValue >= 750)
 	{
-		karmaType = Karma_VeryGood;
-		myKarmaTitle += "VeryGood";
-		myKarmaDescription += "GOOD_";
-		myKarmaSWFPath += "VeryGood.swf";
+		karmaType = GuardianOfTheWastes;
+		myKarmaTitle += "GuardianOfTheWastes";
+		myKarmaDescription += "GuardianOfTheWastes_";
+		myKarmaSWFPath += "GuardianOfTheWastes.swf";
+	}
+	else if (karmaValue >= 500)
+	{
+		karmaType = ShieldOfHope;
+		myKarmaTitle += "ShieldOfHope";
+		myKarmaDescription += "ShieldOfHope_";
+		myKarmaSWFPath += "ShieldOfHope.swf";
+	}
+	else if (karmaValue >= 250)
+	{
+		karmaType = Defender;
+		myKarmaTitle += "Defender";
+		myKarmaDescription += "Defender_";
+		myKarmaSWFPath += "Defender.swf";
+	}
+	else if (karmaValue >= -250)
+	{
+		karmaType = Neutral;
+		myKarmaTitle += "Neutral";
+		myKarmaDescription += "Neutral_";
+		myKarmaSWFPath += "Neutral.swf";
+	}
+	else if (karmaValue >= -500)
+	{
+		karmaType = Betrayer;
+		myKarmaTitle += "Betrayer";
+		myKarmaDescription += "Betrayer_";
+		myKarmaSWFPath += "Betrayer.swf";
+	}
+	else if (karmaValue >= -750)
+	{
+		karmaType = SwordOfDespair;
+		myKarmaTitle += "SwordOfDespair";
+		myKarmaDescription += "SwordOfDespair_";
+		myKarmaSWFPath += "SwordOfDespair.swf";
+	}
+	else if (karmaValue >= -1000)
+	{
+		karmaType = ScourgeOfTheWastes;
+		myKarmaTitle += "ScourgeOfTheWastes";
+		myKarmaDescription += "ScourgeOfTheWastes_";
+		myKarmaSWFPath += "ScourgeOfTheWastes.swf";
+	}
+	else
+	{
+		karmaType = DemonSpawn;
+		myKarmaTitle += "DemonSpawn";
+		myKarmaDescription += "DemonSpawn_";
+		myKarmaSWFPath += "DemonSpawn.swf";
 	}
 
 	if (playerLevel > 30)

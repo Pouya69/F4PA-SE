@@ -43,11 +43,17 @@ namespace PArroyo_Menus {
 
 		enum KarmaTypes
 		{
-			Karma_VeryEvil = 0,
-			Karma_Evil,
-			Karma_Neutral,
-			Karma_Good,
-			Karma_VeryGood
+			DemonSpawn,
+			ScourgeOfTheWastes,
+			SwordOfDespair,
+			Betrayer,
+			Neutral,
+			Defender,
+			ShieldOfHope,
+			GuardianOfTheWastes,
+			SaviorOfTheDamned
+
+			
 		};
 
 		enum PageTypes
