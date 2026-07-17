@@ -232,7 +232,7 @@ void PArroyo_Menus::PipboyTabs::UpdateSkillMenu(Scaleform::GFx::ASMovieRootBase 
 	myMovieRoot->CreateArray(&arrSkills[4]);
 	std::vector<std::string> skillNamesList;
 
-	for (int i = 0; i < 13; i++)
+	for (int i = 0; i < 18; i++)
 	{
 		PopulateSkillEntry(&arrSkills[4], myMovieRoot, i, 1, skillNamesList);
 	}
@@ -396,6 +396,13 @@ bool PArroyo_Menus::PipboyTabs::RegisterScaleform(Scaleform::GFx::Movie* a_view,
 		if (!a_view->asMovieRoot->GetVariable(&root, "root")) {
 			REX::DEBUG("Could not get 'root''");
 		}
+
+
+
+
+
+
+
 
 		a_view->asMovieRoot->CreateObject(&loader, "flash.display.Loader");
 		Scaleform::GFx::Value cwf = "CWPipboy.swf";

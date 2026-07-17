@@ -130,8 +130,22 @@ namespace PArroyo {
 					}
 				}
 
+
+				if (a_boundObject->GetFormType() == RE::ENUM_FORM_ID::kCMPO) {
+					auto player = RE::PlayerCharacter::GetSingleton();
+
+					auto baseComp = Shared::GetBaseComponentFromForm(a_boundObject);
+					std::uint32_t oldCountNew = 0;
+					auto removeData = RE::TESObjectREFR::RemoveItemData(a_boundObject, *a_newCount);
+					player->RemoveItem(removeData);
+
+					player->inventoryList->AddItem2(baseComp->scrapItem, *a_newCount);
+					//AddItem_Original(a_this, baseComp->scrapItem, a_stack, &oldCountNew, a_newCount);
+					
+				}
+
 				// GetHealthPerc returns -1.0 if it can't find the 'kHealth' type.
-				if (traverse->extra->GetHealthPerc() < 0.0f) {
+				if (willHaveHealth && traverse->extra->GetHealthPerc() < 0.0f) {
 					// Set health randomly
 					LOG_TO_CONSOLE(std::format("Added health to item '{}' added.\n", a_boundObject->GetFormID()).c_str());
 					traverse->extra->SetHealthPerc(RE::BSRandom::Float(0.45f, 0.85f));
@@ -596,20 +610,24 @@ namespace PArroyo {
 				if (!inventoryItem.object || !Shared::IsJunkItem(inventoryItem.object) || inventoryItem.IsQuestObject(0))
 					continue;
 
+				auto baseComp = Shared::GetBaseComponentFromForm(inventoryItem.object);
+				if (!baseComp || !baseComp->scrapItem || baseComp->scrapItem->GetFormID() == inventoryItem.object->GetFormID())
+					continue;
+
+
 				RE::TESObjectMISC* miscObject = static_cast<RE::TESObjectMISC*>(inventoryItem.object);
 				if (!miscObject)
 					continue;
 
 				if (!miscObject->componentData || miscObject->componentData->empty())
 					continue;
-				
-
 
 				for (auto it = miscObject->componentData->begin(); it != miscObject->componentData->end(); ++it) {
-					auto boundObj = reinterpret_cast<RE::TESBoundObject*>(it->first);
-					if (!boundObj)
-						continue;
+					//auto compObj = static_cast<RE::BGSComponent*>(it->first);
+					//if (!it->first->IsBoundObject() && (compObj->scrapItem != nullptr && compObj->scrapItem->GetFormID() == miscObject->GetFormID()))
+						//continue;
 
+					auto boundObj = reinterpret_cast<RE::TESBoundObject*>(it->first);
 					// REX::DEBUG("BuildWeaponScrappingArray - scrapItem found with count: {}", it->second.i);
 
 					const auto count = it->second.i * inventoryItem.GetCount();
@@ -1022,23 +1040,34 @@ namespace PArroyo {
 						if (!inventoryItem.object || !Shared::IsJunkItem(inventoryItem.object) || inventoryItem.IsQuestObject(0))
 							continue;
 
-						switch (inventoryItem.object->GetFormType())
-						{
-						case RE::ENUM_FORM_ID::kWEAP: {
-							if (static_cast<RE::TESObjectWEAP*>(inventoryItem.object)->HasKeyword(Shared::notScrappableKeyword)) {
-								continue;
-							}
-							break;
-						}
-						case RE::ENUM_FORM_ID::kARMO: {
-							if (static_cast<RE::TESObjectARMO*>(inventoryItem.object)->HasKeyword(Shared::notScrappableKeyword)) {
-								continue;
-							}
-							break;
-						}
-						default:
-							break;
-						}
+						
+						//RE::TESObjectMISC* miscObj = static_cast<RE::TESObjectMISC*>(inventoryItem.object);
+
+						//if (!miscObj->componentData)
+							//continue;
+
+						//const auto first = miscObj->componentData->at(0).first;
+
+						//RE::BGSComponent* compObj = static_cast<RE::BGSComponent*>(first);
+
+						//if ((compObj && compObj->scrapItem != nullptr && compObj->scrapItem->GetFormID() == miscObj->GetFormID()))
+							//continue;
+
+						//auto miscCompObj = static_cast<RE::TESObjectMISC*>(first);
+
+						//if (miscCompObj && miscCompObj->componentData && !miscCompObj->componentData->empty() && miscCompObj->componentData->at(0).first && miscCompObj->componentData->at(0).first->GetFormID() == miscObj->GetFormID())
+							//continue;
+						
+
+						auto baseComp = Shared::GetBaseComponentFromForm(inventoryItem.object);
+						if (!baseComp || !baseComp->scrapItem || baseComp->scrapItem->GetFormID() == inventoryItem.object->GetFormID())
+							continue;
+
+						//if (inventoryItem.GetCount() == 0) {
+
+						//}
+						
+						
 
 						auto removeData = RE::TESObjectREFR::RemoveItemData(inventoryItem.object, inventoryItem.GetCount());
 

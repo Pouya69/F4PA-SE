@@ -76,6 +76,8 @@ namespace Shared {
 
 	void InitializeSharedForms(RE::TESDataHandler* dataHandler);
 
+	RE::BGSComponent* GetBaseComponentFromForm(RE::TESForm* a_form);
+
 	bool IsJunkItem(RE::TESBoundObject* obj);
 	
 	template<typename T>

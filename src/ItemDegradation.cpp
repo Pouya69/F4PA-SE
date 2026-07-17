@@ -628,26 +628,26 @@ void PArroyo::ItemDegradation::InitializeWeaponConditionMappings(RE::TESDataHand
 
 bool PArroyo::ItemDegradation::RegisterDegradationFunctions(RE::BSScript::IVirtualMachine* vm)
 {
-	vm->BindNativeMethod("TCW:PArroyo", "AddWeaponRepairList", PArroyo::DegradationPapyrus::AddWeaponRepairList_Papyrus);
-	vm->BindNativeMethod("TCW:PArroyo", "AddArmorRepairList", PArroyo::DegradationPapyrus::AddArmorRepairList_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "AddWeaponRepairList", PArroyo::DegradationPapyrus::AddWeaponRepairList_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "AddArmorRepairList", PArroyo::DegradationPapyrus::AddArmorRepairList_Papyrus);
 
-	vm->BindNativeMethod("TCW:PArroyo", "UpdateInventoryCondition", PArroyo::DegradationPapyrus::UpdateInventoryCondition_Papyrus);
-	vm->BindNativeMethod("TCW:PArroyo", "GetEquippedWeaponConditionPercent", PArroyo::DegradationPapyrus::GetEquippedWeaponConditionPercentage_Papyrus);
-	vm->BindNativeMethod("TCW:PArroyo", "ModEquippedWeaponConditionPercent", PArroyo::DegradationPapyrus::ModEquippedWeaponConditionPercentage_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "UpdateInventoryCondition", PArroyo::DegradationPapyrus::UpdateInventoryCondition_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "GetEquippedWeaponConditionPercent", PArroyo::DegradationPapyrus::GetEquippedWeaponConditionPercentage_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "ModEquippedWeaponConditionPercent", PArroyo::DegradationPapyrus::ModEquippedWeaponConditionPercentage_Papyrus);
 
-	vm->BindNativeMethod("TCW:PArroyo", "GetWeaponRepairList", PArroyo::DegradationPapyrus::GetWeaponRepairList_Papyrus);
-	vm->BindNativeMethod("TCW:PArroyo", "GetWeaponRepairKeyword", PArroyo::DegradationPapyrus::GetWeaponRepairKeyword_Papyrus);
-	vm->BindNativeMethod("TCW:PArroyo", "CanWeaponBeRepairedWithOther", PArroyo::DegradationPapyrus::CanWeaponBeRepairedWithOther_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "GetWeaponRepairList", PArroyo::DegradationPapyrus::GetWeaponRepairList_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "GetWeaponRepairKeyword", PArroyo::DegradationPapyrus::GetWeaponRepairKeyword_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "CanWeaponBeRepairedWithOther", PArroyo::DegradationPapyrus::CanWeaponBeRepairedWithOther_Papyrus);
 
-	vm->BindNativeMethod("TCW:PArroyo", "UpdateWeaponRefStats", PArroyo::DegradationPapyrus::UpdateWeaponRefStats_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "UpdateWeaponRefStats", PArroyo::DegradationPapyrus::UpdateWeaponRefStats_Papyrus);
 
-	vm->BindNativeMethod("TCW:PArroyo", "GetArmorRepairList", PArroyo::DegradationPapyrus::GetArmorRepairList_Papyrus);
-	vm->BindNativeMethod("TCW:PArroyo", "GetArmorRepairKeyword", PArroyo::DegradationPapyrus::GetArmorRepairKeyword_Papyrus);
-	vm->BindNativeMethod("TCW:PArroyo", "CanArmorBeRepairedWithOther", PArroyo::DegradationPapyrus::CanArmorBeRepairedWithOther_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "GetArmorRepairList", PArroyo::DegradationPapyrus::GetArmorRepairList_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "GetArmorRepairKeyword", PArroyo::DegradationPapyrus::GetArmorRepairKeyword_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "CanArmorBeRepairedWithOther", PArroyo::DegradationPapyrus::CanArmorBeRepairedWithOther_Papyrus);
 
-	vm->BindNativeMethod("TCW:PArroyo", "UpdateArmorRefStats", PArroyo::DegradationPapyrus::UpdateArmorRefStats_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "UpdateArmorRefStats", PArroyo::DegradationPapyrus::UpdateArmorRefStats_Papyrus);
 
-	// vm->BindNativeMethod("TCW:PArroyo", "AddItemHealthPercent", PArroyo::DegradationPapyrus::AddItemHealthPercent_Papyrus);
+	// vm->BindNativeMethod("PArroyo:PArroyo", "AddItemHealthPercent", PArroyo::DegradationPapyrus::AddItemHealthPercent_Papyrus);
 
 	return true;
 }

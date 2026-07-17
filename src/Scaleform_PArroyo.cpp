@@ -1014,6 +1014,11 @@ void Workbench_HasAnyJunk::Call(const Params& a_params)
 		if (!inventoryItem.object || !Shared::IsJunkItem(inventoryItem.object) || inventoryItem.IsQuestObject(0))
 			continue;
 
+		auto baseComp = Shared::GetBaseComponentFromForm(inventoryItem.object);
+		if (!baseComp || !baseComp->scrapItem || baseComp->scrapItem->GetFormID() == inventoryItem.object->GetFormID())
+			continue;
+		
+
 		switch (inventoryItem.object->GetFormType())
 		{
 		case RE::ENUM_FORM_ID::kWEAP: {
@@ -1074,6 +1079,10 @@ void Workbench_HasAnyJunkExamine::Call(const Params& a_params)
 		RE::BGSInventoryItem inventoryItem = player->inventoryList->data.at(i);
 
 		if (!inventoryItem.object || !Shared::IsJunkItem(inventoryItem.object) || inventoryItem.IsQuestObject(0))
+			continue;
+
+		auto baseComp = Shared::GetBaseComponentFromForm(inventoryItem.object);
+		if (!baseComp || !baseComp->scrapItem || baseComp->scrapItem->GetFormID() == inventoryItem.object->GetFormID())
 			continue;
 
 		switch (inventoryItem.object->GetFormType())

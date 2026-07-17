@@ -74,35 +74,45 @@ namespace PArroyo_Menus {
 		extern RE::BSTArray<RE::ActorValueInfo*> scaleformSkills;
 
 		namespace InitialValues {
-			extern std::uint32_t barter;
-			extern std::uint32_t bigGuns;
-			extern std::uint32_t energyWeapons;
-			extern std::uint32_t Traps;
-			extern std::uint32_t lockpick;
+			extern std::uint32_t SmallGuns;
+			extern std::uint32_t BigGuns;
+			extern std::uint32_t EnergyWeapons;
+			extern std::uint32_t Unarmed;
+			extern std::uint32_t MeleeWeapons;
+			extern std::uint32_t Throwing;
+			extern std::uint32_t FirstAid;
 			extern std::uint32_t Doctor;
-			extern std::uint32_t meleeWeapons;
-			extern std::uint32_t repair;
-			extern std::uint32_t science;
-			extern std::uint32_t smallGuns;
-			extern std::uint32_t sneak;
-			extern ::uint32_t speech;
-			extern std::uint32_t unarmed;
+			extern std::uint32_t Sneak;
+			extern std::uint32_t Lockpick;
+			extern std::uint32_t Steal;
+			extern std::uint32_t Traps;
+			extern std::uint32_t Science;
+			extern std::uint32_t Repair;
+			extern std::uint32_t Speech;
+			extern std::uint32_t Barter;
+			extern std::uint32_t Gambling;
+			extern std::uint32_t Outdoorsman;
 		}
 
 		namespace TempModValues {
-			extern std::uint32_t barter;
-			extern std::uint32_t bigGuns;
-			extern std::uint32_t energyWeapons;
-			extern std::uint32_t Traps;
-			extern std::uint32_t lockpick;
+			extern std::uint32_t SmallGuns;
+			extern std::uint32_t BigGuns;
+			extern std::uint32_t EnergyWeapons;
+			extern std::uint32_t Unarmed;
+			extern std::uint32_t MeleeWeapons;
+			extern std::uint32_t Throwing;
+			extern std::uint32_t FirstAid;
 			extern std::uint32_t Doctor;
-			extern std::uint32_t meleeWeapons;
-			extern std::uint32_t repair;
-			extern std::uint32_t science;
-			extern std::uint32_t smallGuns;
-			extern std::uint32_t sneak;
-			extern std::uint32_t speech;
-			extern std::uint32_t unarmed;
+			extern std::uint32_t Sneak;
+			extern std::uint32_t Lockpick;
+			extern std::uint32_t Steal;
+			extern std::uint32_t Traps;
+			extern std::uint32_t Science;
+			extern std::uint32_t Repair;
+			extern std::uint32_t Speech;
+			extern std::uint32_t Barter;
+			extern std::uint32_t Gambling;
+			extern std::uint32_t Outdoorsman;
 		}
 
 		void GetINIOptions();
@@ -126,7 +136,12 @@ namespace PArroyo_Menus {
 			SmallGuns = 9,
 			Sneak = 10,
 			Speech = 11,
-			Unarmed = 12
+			Unarmed = 12,
+			FirstAid = 13,
+			Steal = 14,
+			Gambling = 15,
+			Outdoorsman = 16,
+			Throwing = 17
 		};
 
 		enum LevelTypes
@@ -453,7 +468,7 @@ namespace PArroyo_Menus {
 						continue;
 					}
 
-					if ((std::uint32_t) myAV->GetFormID() == (std::uint32_t) avFromParams->GetFormID())
+					if ((std::uint32_t) myAV->GetFormID() == (std::uint32_t) avFromParams->GetFormID() && !Skills::ScaleformSkillSounds.empty() && Skills::ScaleformSkillSounds.size() > i)
 					{
 						RE::BGSSoundDescriptorForm* mySkillSound = Skills::ScaleformSkillSounds[i];
 						if (!mySkillSound) {
@@ -498,12 +513,14 @@ namespace PArroyo_Menus {
 				// @TODO: This makes perkIndex a very big number 1231231236 smth like that.
 				std::uint32_t perkIndex = a_params.args[0].GetUInt();
 
-				RE::BGSPerk* myPerk = Skills::PAPerksLevelUp[perkIndex];
 				const int arraySize = Skills::ScaleformPerkSounds.size();
-				if (arraySize <= perkIndex) {
+				if (Skills::ScaleformPerkSounds.empty() || arraySize <= perkIndex) {
 					REX::WARN(std::format("PlayPerkSound: Perk index '{}' is more than array size '{}'", perkIndex, arraySize));
 					return;
 				}
+
+				RE::BGSPerk* myPerk = Skills::PAPerksLevelUp[perkIndex];
+
 
 				RE::BGSSoundDescriptorForm* myPerkSound = Skills::ScaleformPerkSounds[perkIndex];
 

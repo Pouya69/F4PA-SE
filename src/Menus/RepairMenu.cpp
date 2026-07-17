@@ -1079,7 +1079,7 @@ namespace RepairMenu_Papyrus
 
 bool PArroyo_Menus::RepairMenu::RegisterRepairMenuFunctions(RE::BSScript::IVirtualMachine* vm)
 {
-	vm->BindNativeMethod("TCW:PArroyo", "OpenRepairVendorMenu", RepairMenu_Papyrus::OpenRepairVendorMenu_Papyrus);
+	vm->BindNativeMethod("PArroyo:PArroyo", "OpenRepairVendorMenu", RepairMenu_Papyrus::OpenRepairVendorMenu_Papyrus);
 	return true;
 }
 

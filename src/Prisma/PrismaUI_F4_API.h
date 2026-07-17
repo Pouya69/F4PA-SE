@@ -20,7 +20,7 @@ namespace PRISMA_UI_API {
     constexpr const auto PrismaUIPluginName = "PrismaUI_F4";
 
     // Available PrismaUI interface versions
-    enum class InterfaceVersion : uint8_t { V1, V2, V3, V4 };
+    enum class InterfaceVersion : uint8_t { V1, V2, V3, V4, V5, V6, V7, V8 };
 
     typedef void (*OnDomReadyCallback)(PrismaView view);
     typedef void (*JSCallback)(const char* result);
@@ -122,11 +122,9 @@ namespace PRISMA_UI_API {
         ~IVPrismaUI3() = default;
 
     public:
-        // Register translations for a view from a Fallout 4 translation file.
-        // pluginName is the bare plugin name matching the translation file, e.g. "MyPlugin_F4".
-        // The framework detects the game language, loads Data\Interface\Translations\<pluginName>_<lang>.txt,
-        // and injects window.L10N / window.t into the page before scripts run (OnWindowObjectReady).
-        // Call this immediately after CreateView, before the DOM is ready.
+        // Load Data\Interface\Translations\<pluginName>_<lang>.txt for the game's language and
+        // inject window.L10N and window.t() into the page. Call right after CreateView.
+        // See docs/translations.md.
         virtual void RegisterTranslations(PrismaView view, const char* pluginName) noexcept = 0;
     };
 
@@ -140,9 +138,8 @@ namespace PRISMA_UI_API {
         ~IVPrismaUI4() = default;
 
     public:
-        // Game-thread-safe JS listener. Callback fires on the game thread — RE:: access is safe
-        // directly inside the callback with no AddTask required.
-        // Use this instead of RegisterJSListener whenever you need to touch game state.
+        // JS listener whose callback runs on the game thread, so you can touch RE:: state
+        // directly without AddTask. Prefer this over RegisterJSListener when you need game state.
         virtual void BindUIEvent(PrismaView view, const char* functionName,
                                  JSListenerCallback callback) noexcept = 0;
 
@@ -153,8 +150,122 @@ namespace PRISMA_UI_API {
         virtual void EnumerateViews(ViewEnumCallback callback, void* userdata) noexcept = 0;
     };
 
-    // Maps interface types to InterfaceVersion enum values.
-    // compile-time constraint -- only request interface versions that actually exist.
+    // PrismaUI modder interface v5 (extends v4)
+    class IVPrismaUI5 : public IVPrismaUI4 {
+    protected:
+        ~IVPrismaUI5() = default;
+
+    public:
+        // The view's live D3D11 SRV (ID3D11ShaderResourceView*), as void* to keep d3d11.h out of
+        // this header. Null until the view has rendered a frame. Don't Release() it.
+        virtual void* GetViewSRV(PrismaView view) noexcept = 0;
+
+        // Keep rendering the view to its texture but never draw it as a 2D overlay.
+        // Use for on-mesh rendering.
+        virtual void SetViewOffscreen(PrismaView view, bool offscreen) noexcept = 0;
+
+        // Draw the view onto a 3D surface. rootObject is an RE::NiAVObject* (void* keeps
+        // CommonLib out of this header); geometryName is a node under it, e.g. "Screen:0".
+        // Call SetViewOffscreen(true) first, bind once the geometry exists, and re-bind on each
+        // open since the model can be rebuilt. See docs/on-mesh-rendering.md.
+        virtual bool BindViewToGeometry(PrismaView view, void* rootObject, const char* geometryName) noexcept = 0;
+
+        // Same, but finds the target by diffuse texture path instead of node name. Useful for the
+        // Pip-Boy screen, which every replacer maps to "PipBoyScreen_d".
+        virtual bool BindViewToScreenTexture(PrismaView view, void* rootObject, const char* textureSubstring) noexcept = 0;
+
+        // Restore the geometry's original texture. Call while it is still in the scene.
+        virtual void UnbindViewFromGeometry(PrismaView view) noexcept = 0;
+    };
+
+    // PrismaUI modder interface v6 (extends v5)
+    class IVPrismaUI6 : public IVPrismaUI5 {
+    protected:
+        ~IVPrismaUI6() = default;
+
+    public:
+        // Hide or restore a vanilla HUD widget, e.g. "HUDCompass", "HUDAmmoCounter".
+        // Survives HUD rebuilds and save loads. False on an unknown name, or on NG/AE.
+        virtual bool SuppressHUDWidget(const char* className, bool suppress) noexcept = 0;
+
+        // Hide a vanilla menu by MENU_NAME, e.g. "PipboyMenu". Reapplied on every reopen.
+        virtual bool SuppressVanillaMenu(const char* menuName, bool suppress) noexcept = 0;
+
+        // Close a vanilla menu now. Pair with SuppressVanillaMenu to keep it closed.
+        virtual bool CloseVanillaMenu(const char* menuName) noexcept = 0;
+    };
+
+    // Return true to suppress this open, false to allow it. Runs on the game thread, so keep it
+    // cheap.
+    typedef bool (*MenuSuppressPredicate)();
+
+    // PrismaUI modder interface v7 (extends v6)
+    class IVPrismaUI7 : public IVPrismaUI6 {
+    protected:
+        ~IVPrismaUI7() = default;
+
+    public:
+        // SuppressVanillaMenu, but the predicate decides on each open. Pass null to unregister.
+        virtual void SuppressVanillaMenuIf(const char* menuName, MenuSuppressPredicate predicate) noexcept = 0;
+
+        // Filter the vanilla "E) TAKE  R) TRANSFER" row on lootable refs. OG only.
+        // dropDefaultTake also removes the default Take button. Doors, terminals and NPCs are left
+        // alone. The first run logs each choice's perk FormID so you can find what to drop.
+        virtual void EnableActivateChoiceFilter(bool enable, bool dropDefaultTake) noexcept = 0;
+
+        // Drop or restore one perk's entry in that row, by runtime FormID.
+        virtual void SuppressActivateChoicePerk(uint32_t perkFormID, bool suppress) noexcept = 0;
+    };
+
+    // Like ViewEnumCallback, plus the module that created the view, e.g. "MyPlugin.dll".
+    // Empty if it could not be resolved.
+    typedef void (*ViewEnumCallbackEx)(PrismaView id, const char* htmlPath, const char* owner, void* userdata);
+
+    // Health of a view, from GetViewHealth.
+    enum class ViewHealth : int {
+        kUnknown = -1,         // CEF not active, or `view` is not a currently-known handle
+        kCreating = 0,         // CreateView issued, iframe mounting
+        kDomReady = 1,         // OnDomReady fired
+        kLive = 2,             // healthy / interactive
+        kLoadFailed = 3,       // page/iframe failed to load
+        kDomReadyTimeout = 4,  // never fired OnDomReady within the watchdog window
+        kUnresponsive = 5,     // missed liveness pings
+        kJsError = 6,          // accumulating uncaught/console errors (not fatal; flagged)
+    };
+
+    // PrismaUI modder interface v8 (extends v7)
+    class IVPrismaUI8 : public IVPrismaUI7 {
+    protected:
+        ~IVPrismaUI8() = default;
+
+    public:
+        // Same as EnumerateViews (V4), but also reports which plugin created each view. Callback is
+        // invoked synchronously for each view; safe to call from any thread.
+        virtual void EnumerateViewsEx(ViewEnumCallbackEx callback, void* userdata) noexcept = 0;
+
+        // --- appended in-place to V8 (ABI-safe: added at the END of the vtable, existing offsets
+        // Read the label of the captured activate choice at buttonIndex (0..3), e.g. "Field Dress".
+        // Needs EnableActivateChoiceFilter(true, ...). False if that slot is empty.
+        virtual bool GetActivateChoiceLabel(uint32_t buttonIndex, char* outBuffer, size_t bufferSize) noexcept = 0;
+
+        // Fire the captured choice at buttonIndex, replaying the same call the engine makes when
+        // the vanilla row's button is clicked. Call it soon after reading the label with
+        // GetActivateChoiceLabel: the captured listener isn't reference-counted here, so it can go
+        // stale if the player's target changes in between. Returns false if that slot is empty.
+        virtual bool TriggerActivateChoice(uint32_t buttonIndex) noexcept = 0;
+
+        // Current health of a view: load errors, piling-up JS console errors, a missed onDomReady,
+        // missed liveness pings. Returns kUnknown if CEF isn't running or the handle is unknown.
+        // See ViewHealth below for the states.
+        virtual ViewHealth GetViewHealth(PrismaView view) noexcept = 0;
+
+        // Resolution of a view's offscreen browser. Match the aspect ratio of the target quad, not
+        // the game window, or the page comes out stretched. Safe to call before SetViewOffscreen.
+        // See docs/on-mesh-rendering.md.
+        virtual void SetViewOffscreenSize(PrismaView view, int width, int height) noexcept = 0;
+    };
+
+    // Maps an interface type to its version, so you can only ask for one that exists.
     template <typename T>
     struct InterfaceVersionMap;
 
@@ -176,6 +287,26 @@ namespace PRISMA_UI_API {
     template <>
     struct InterfaceVersionMap<IVPrismaUI4> {
         static constexpr InterfaceVersion version = InterfaceVersion::V4;
+    };
+
+    template <>
+    struct InterfaceVersionMap<IVPrismaUI5> {
+        static constexpr InterfaceVersion version = InterfaceVersion::V5;
+    };
+
+    template <>
+    struct InterfaceVersionMap<IVPrismaUI6> {
+        static constexpr InterfaceVersion version = InterfaceVersion::V6;
+    };
+
+    template <>
+    struct InterfaceVersionMap<IVPrismaUI7> {
+        static constexpr InterfaceVersion version = InterfaceVersion::V7;
+    };
+
+    template <>
+    struct InterfaceVersionMap<IVPrismaUI8> {
+        static constexpr InterfaceVersion version = InterfaceVersion::V8;
     };
 
     typedef void* (*RequestPluginAPIFunc)(InterfaceVersion interfaceVersion);

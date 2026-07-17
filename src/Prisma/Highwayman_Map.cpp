@@ -42,7 +42,8 @@ namespace PArroyo {
 				g_visible = false;
 				Shared::prisma_api->Hide(g_view);
 			}
-			// Shared::prisma_api->CreateInspectorView(g_view);
+
+			Shared::prisma_api->CreateInspectorView(g_view);
 
 			
 
@@ -101,7 +102,7 @@ namespace PArroyo {
 			Shared::prisma_api->Show(g_view);
 			g_visible = true;
 
-			Shared::prisma_api->Focus(g_view, true);
+			Shared::prisma_api->Focus(g_view);
 
 			const auto currentPlayerLocation = RE::PlayerCharacter::GetSingleton()->GetCurrentLocation();
 

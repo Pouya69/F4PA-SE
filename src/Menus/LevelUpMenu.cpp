@@ -51,35 +51,45 @@ namespace PArroyo_Menus {
 		RE::BSTArray<RE::ActorValueInfo*> scaleformSkills;
 
 		namespace InitialValues {
-			std::uint32_t barter;
-			std::uint32_t bigGuns;
-			std::uint32_t energyWeapons;
-			std::uint32_t Traps;
-			std::uint32_t lockpick;
+			std::uint32_t SmallGuns;
+			std::uint32_t BigGuns;
+			std::uint32_t EnergyWeapons;
+			std::uint32_t Unarmed;
+			std::uint32_t MeleeWeapons;
+			std::uint32_t Throwing;
+			std::uint32_t FirstAid;
 			std::uint32_t Doctor;
-			std::uint32_t meleeWeapons;
-			std::uint32_t repair;
-			std::uint32_t science;
-			std::uint32_t smallGuns;
-			std::uint32_t sneak;
-			std::uint32_t speech;
-			std::uint32_t unarmed;
+			std::uint32_t Sneak;
+			std::uint32_t Lockpick;
+			std::uint32_t Steal;
+			std::uint32_t Traps;
+			std::uint32_t Science;
+			std::uint32_t Repair;
+			std::uint32_t Speech;
+			std::uint32_t Barter;
+			std::uint32_t Gambling;
+			std::uint32_t Outdoorsman;
 		}
 
 		namespace TempModValues {
-			std::uint32_t barter;
-			std::uint32_t bigGuns;
-			std::uint32_t energyWeapons;
-			std::uint32_t Traps;
-			std::uint32_t lockpick;
+			std::uint32_t SmallGuns;
+			std::uint32_t BigGuns;
+			std::uint32_t EnergyWeapons;
+			std::uint32_t Unarmed;
+			std::uint32_t MeleeWeapons;
+			std::uint32_t Throwing;
+			std::uint32_t FirstAid;
 			std::uint32_t Doctor;
-			std::uint32_t meleeWeapons;
-			std::uint32_t repair;
-			std::uint32_t science;
-			std::uint32_t smallGuns;
-			std::uint32_t sneak;
-			std::uint32_t speech;
-			std::uint32_t unarmed;
+			std::uint32_t Sneak;
+			std::uint32_t Lockpick;
+			std::uint32_t Steal;
+			std::uint32_t Traps;
+			std::uint32_t Science;
+			std::uint32_t Repair;
+			std::uint32_t Speech;
+			std::uint32_t Barter;
+			std::uint32_t Gambling;
+			std::uint32_t Outdoorsman;
 		}
 		void GetINIOptions()
 		{
@@ -98,30 +108,35 @@ namespace PArroyo_Menus {
 		{
 			RE::PlayerCharacter* playerCharacter = RE::PlayerCharacter::GetSingleton();
 
-			InitialValues::barter = playerCharacter->GetPermanentActorValue(*PA_Skills.Barter);
-			InitialValues::bigGuns = playerCharacter->GetPermanentActorValue(*PA_Skills.BigGuns);
-			InitialValues::energyWeapons = playerCharacter->GetPermanentActorValue(*PA_Skills.EnergyWeapons);
-			InitialValues::Traps = playerCharacter->GetPermanentActorValue(*PA_Skills.Traps);
-			InitialValues::lockpick = playerCharacter->GetPermanentActorValue(*PA_Skills.Lockpick);
+			InitialValues::SmallGuns = playerCharacter->GetPermanentActorValue(*PA_Skills.SmallGuns);
+			InitialValues::BigGuns = playerCharacter->GetPermanentActorValue(*PA_Skills.BigGuns);
+			InitialValues::EnergyWeapons = playerCharacter->GetPermanentActorValue(*PA_Skills.EnergyWeapons);
+			InitialValues::Unarmed = playerCharacter->GetPermanentActorValue(*PA_Skills.Unarmed);
+			InitialValues::MeleeWeapons = playerCharacter->GetPermanentActorValue(*PA_Skills.MeleeWeapons);
+			InitialValues::Throwing = playerCharacter->GetPermanentActorValue(*PA_Skills.Throwing);
+			InitialValues::FirstAid = playerCharacter->GetPermanentActorValue(*PA_Skills.FirstAid);
 			InitialValues::Doctor = playerCharacter->GetPermanentActorValue(*PA_Skills.Doctor);
-			InitialValues::meleeWeapons = playerCharacter->GetPermanentActorValue(*PA_Skills.MeleeWeapons);
-			InitialValues::repair = playerCharacter->GetPermanentActorValue(*PA_Skills.Repair);
-			InitialValues::science = playerCharacter->GetPermanentActorValue(*PA_Skills.Science);
-			InitialValues::smallGuns = playerCharacter->GetPermanentActorValue(*PA_Skills.SmallGuns);
-			InitialValues::sneak = playerCharacter->GetPermanentActorValue(*PA_Skills.Sneak);
-			InitialValues::speech = playerCharacter->GetPermanentActorValue(*PA_Skills.Speech);
-			InitialValues::unarmed = playerCharacter->GetPermanentActorValue(*PA_Skills.Unarmed);
+			InitialValues::Sneak = playerCharacter->GetPermanentActorValue(*PA_Skills.Sneak);
+			InitialValues::Lockpick = playerCharacter->GetPermanentActorValue(*PA_Skills.Lockpick);
+			InitialValues::Steal = playerCharacter->GetPermanentActorValue(*PA_Skills.Steal);
+			InitialValues::Traps = playerCharacter->GetPermanentActorValue(*PA_Skills.Traps);
+			InitialValues::Science = playerCharacter->GetPermanentActorValue(*PA_Skills.Science);
+			InitialValues::Repair = playerCharacter->GetPermanentActorValue(*PA_Skills.Repair);
+			InitialValues::Speech = playerCharacter->GetPermanentActorValue(*PA_Skills.Speech);
+			InitialValues::Barter = playerCharacter->GetPermanentActorValue(*PA_Skills.Barter);
+			InitialValues::Gambling = playerCharacter->GetPermanentActorValue(*PA_Skills.Gambling);
+			InitialValues::Outdoorsman = playerCharacter->GetPermanentActorValue(*PA_Skills.Outdoorsman);
 		}
 
 		float GetInitialActorValue(RE::ActorValueInfo* a_skill)
 		{
 			if (a_skill == PA_Skills.Barter)
 			{
-				return InitialValues::barter;
+				return InitialValues::Barter;
 			}
 			else if (a_skill == PA_Skills.EnergyWeapons)
 			{
-				return InitialValues::energyWeapons;
+				return InitialValues::EnergyWeapons;
 			}
 			else if (a_skill == PA_Skills.Traps)
 			{
@@ -129,11 +144,11 @@ namespace PArroyo_Menus {
 			}
 			else if (a_skill == PA_Skills.BigGuns)
 			{
-				return InitialValues::bigGuns;
+				return InitialValues::BigGuns;
 			}
 			else if (a_skill == PA_Skills.Lockpick)
 			{
-				return InitialValues::lockpick;
+				return InitialValues::Lockpick;
 			}
 			else if (a_skill == PA_Skills.Doctor)
 			{
@@ -141,31 +156,51 @@ namespace PArroyo_Menus {
 			}
 			else if (a_skill == PA_Skills.MeleeWeapons)
 			{
-				return InitialValues::meleeWeapons;
+				return InitialValues::MeleeWeapons;
 			}
 			else if (a_skill == PA_Skills.Repair)
 			{
-				return InitialValues::repair;
+				return InitialValues::Repair;
 			}
 			else if (a_skill == PA_Skills.Science)
 			{
-				return InitialValues::science;
+				return InitialValues::Science;
 			}
 			else if (a_skill == PA_Skills.Sneak)
 			{
-				return InitialValues::sneak;
+				return InitialValues::Sneak;
 			}
 			else if (a_skill == PA_Skills.Speech)
 			{
-				return InitialValues::speech;
+				return InitialValues::Speech;
 			}
 			else if (a_skill == PA_Skills.SmallGuns)
 			{
-				return InitialValues::smallGuns;
+				return InitialValues::SmallGuns;
 			}
 			else if (a_skill == PA_Skills.Unarmed)
 			{
-				return InitialValues::unarmed;
+				return InitialValues::Unarmed;
+			}
+			else if (a_skill == PA_Skills.FirstAid)
+			{
+				return InitialValues::FirstAid;
+			}
+			else if (a_skill == PA_Skills.Steal)
+			{
+				return InitialValues::Steal;
+			}
+			else if (a_skill == PA_Skills.Gambling)
+			{
+				return InitialValues::Gambling;
+			}
+			else if (a_skill == PA_Skills.Outdoorsman)
+			{
+				return InitialValues::Outdoorsman;
+			}
+			else if (a_skill == PA_Skills.Throwing)
+			{
+				return InitialValues::Throwing;
 			}
 			else
 			{
@@ -203,19 +238,24 @@ namespace PArroyo_Menus {
 			Scaleform::GFx::Value argumentsArray[3];
 			a_movieRoot->CreateArray(&argumentsArray[0]);
 
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Barter);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.SmallGuns);
 			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.BigGuns);
 			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.EnergyWeapons);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Traps);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Lockpick);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Doctor);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.MeleeWeapons);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Repair);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Science);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.SmallGuns);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Sneak);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Speech);
 			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Unarmed);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.MeleeWeapons);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Throwing);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.FirstAid);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Doctor);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Sneak);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Lockpick);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Steal);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Traps);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Science);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Repair);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Speech);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Barter);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Gambling);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Outdoorsman);
 
 			argumentsArray[1] = PArroyoSerialization::GetSkillPoints();
 			argumentsArray[2] = RE::PlayerCharacter::GetSingleton()->GetLevel();
@@ -228,19 +268,24 @@ namespace PArroyo_Menus {
 			Scaleform::GFx::Value argumentsArray[3];
 			a_movieRoot->CreateArray(&argumentsArray[0]);
 
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Barter);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.SmallGuns);
 			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.BigGuns);
 			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.EnergyWeapons);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Traps);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Lockpick);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Doctor);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.MeleeWeapons);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Repair);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Science);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.SmallGuns);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Sneak);
-			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Speech);
 			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Unarmed);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.MeleeWeapons);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Throwing);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.FirstAid);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Doctor);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Sneak);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Lockpick);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Steal);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Traps);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Science);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Repair);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Speech);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Barter);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Gambling);
+			PopulateSkillEntry(&argumentsArray[0], a_movieRoot, PA_Skills.Outdoorsman);
 
 			argumentsArray[1] = a_tagSkills;
 			argumentsArray[2] = a_retag;
@@ -375,63 +420,84 @@ namespace PArroyo_Menus {
 		}
 		std::uint32_t GetSkillArrayIndexByEditorID(const char* myEditorID)
 		{
-			if (myEditorID == "00DCBarter")
+			if (myEditorID == "00PA_Barter")
 			{
 				return SkillArray::Barter;
 			}
-			else if (myEditorID == "00DCBigGuns")
+			else if (myEditorID == "00PA_BigGuns")
 			{
 				return SkillArray::BigGuns;
 			}
-			else if (myEditorID == "00DCEnergyWeapons")
+			else if (myEditorID == "00PA_EnergyWeapons")
 			{
 				return SkillArray::EnergyWeapons;
 			}
-			else if (myEditorID == "00DCExplosives")
+			else if (myEditorID == "00PA_Explosives")
 			{
 				return SkillArray::Traps;
 			}
-			else if (myEditorID == "00DCLockpick")
+			else if (myEditorID == "00PA_Lockpick")
 			{
 				return SkillArray::Lockpick;
 			}
-			else if (myEditorID == "00DCMedicine")
+			else if (myEditorID == "00PA_Medicine")
 			{
 				return SkillArray::Doctor;
 			}
-			else if (myEditorID == "00DCMeleeWeapons")
+			else if (myEditorID == "00PA_MeleeWeapons")
 			{
 				return SkillArray::MeleeWeapons;
 			}
-			else if (myEditorID == "00DCRepair")
+			else if (myEditorID == "00PA_Repair")
 			{
 				return SkillArray::Repair;
 			}
-			else if (myEditorID == "00DCScience")
+			else if (myEditorID == "00PA_Science")
 			{
 				return SkillArray::Science;
 			}
-			else if (myEditorID == "00DCSmallGuns")
+			else if (myEditorID == "00PA_SmallGuns")
 			{
 				return SkillArray::SmallGuns;
 			}
-			else if (myEditorID == "00DCSneak")
+			else if (myEditorID == "00PA_Sneak")
 			{
 				return SkillArray::Sneak;
 			}
-			else if (myEditorID == "00DCSpeech")
+			else if (myEditorID == "00PA_Speech")
 			{
 				return SkillArray::Speech;
 			}
-			else if (myEditorID == "00DCUnarmed")
+			else if (myEditorID == "00PA_Unarmed")
 			{
 				return SkillArray::Unarmed;
+			}
+			else if (myEditorID == "00PA_FirstAid")
+			{
+				return SkillArray::FirstAid;
+			}
+			else if (myEditorID == "00PA_Steal")
+			{
+				return SkillArray::Steal;
+			}
+			else if (myEditorID == "00PA_Gambling")
+			{
+				return SkillArray::Gambling;
+			}
+			else if (myEditorID == "00PA_Outdoorsman")
+			{
+				return SkillArray::Outdoorsman;
+			}
+			else if (myEditorID == "00PA_Throwing")
+			{
+				return SkillArray::Throwing;
 			}
 			else
 			{
 				return -1;
 			}
 		}
+
 		float GetSkillPointsToAdd(std::uint16_t levelsToProgress)
 		{
 			// Fallout 3 formula is 10 + base intelligence
@@ -594,57 +660,77 @@ namespace PArroyo_Menus {
 
 			std::uint32_t modValue = (a_value - a_baseValue);
 
-			if (skillEditorID == "00DCBarter")
+			if (skillEditorID == "00PA_Barter")
 			{
-				TempModValues::barter = modValue;
+				TempModValues::Barter = modValue;
 			}
-			else if (skillEditorID == "00DCEnergyWeapons")
+			else if (skillEditorID == "00PA_EnergyWeapons")
 			{
-				TempModValues::energyWeapons = modValue;
+				TempModValues::EnergyWeapons = modValue;
 			}
-			else if (skillEditorID == "00DCExplosives")
+			else if (skillEditorID == "00PA_Explosives")
 			{
 				TempModValues::Traps = modValue;
 			}
-			else if (skillEditorID == "00DCBigGuns")
+			else if (skillEditorID == "00PA_BigGuns")
 			{
-				TempModValues::bigGuns = modValue;
+				TempModValues::BigGuns = modValue;
 			}
-			else if (skillEditorID == "00DCLockpick")
+			else if (skillEditorID == "00PA_Lockpick")
 			{
-				TempModValues::lockpick = modValue;
+				TempModValues::Lockpick = modValue;
 			}
-			else if (skillEditorID == "00DCMedicine")
+			else if (skillEditorID == "00PA_Medicine")
 			{
 				TempModValues::Doctor = modValue;
 			}
-			else if (skillEditorID == "00DCMeleeWeapons")
+			else if (skillEditorID == "00PA_MeleeWeapons")
 			{
-				TempModValues::meleeWeapons = modValue;
+				TempModValues::MeleeWeapons = modValue;
 			}
-			else if (skillEditorID == "00DCRepair")
+			else if (skillEditorID == "00PA_Repair")
 			{
-				TempModValues::repair = modValue;
+				TempModValues::Repair = modValue;
 			}
-			else if (skillEditorID == "00DCScience")
+			else if (skillEditorID == "00PA_Science")
 			{
-				TempModValues::science = modValue;
+				TempModValues::Science = modValue;
 			}
-			else if (skillEditorID == "00DCSneak")
+			else if (skillEditorID == "00PA_Sneak")
 			{
-				TempModValues::sneak = modValue;
+				TempModValues::Sneak = modValue;
 			}
-			else if (skillEditorID == "00DCSpeech")
+			else if (skillEditorID == "00PA_Speech")
 			{
-				TempModValues::speech = modValue;
+				TempModValues::Speech = modValue;
 			}
-			else if (skillEditorID == "00DCSmallGuns")
+			else if (skillEditorID == "00PA_SmallGuns")
 			{
-				TempModValues::smallGuns = modValue;
+				TempModValues::SmallGuns = modValue;
 			}
-			else if (skillEditorID == "00DCUnarmed")
+			else if (skillEditorID == "00PA_Unarmed")
 			{
-				TempModValues::unarmed = modValue;
+				TempModValues::Unarmed = modValue;
+			}
+			else if (skillEditorID == "00PA_FirstAid")
+			{
+				TempModValues::FirstAid = modValue;
+			}
+			else if (skillEditorID == "00PA_Steal")
+			{
+				TempModValues::Steal = modValue;
+			}
+			else if (skillEditorID == "00PA_Gambling")
+			{
+				TempModValues::Gambling = modValue;
+			}
+			else if (skillEditorID == "00PA_Outdoorsman")
+			{
+				TempModValues::Outdoorsman = modValue;
+			}
+			else if (skillEditorID == "00PA_Throwing")
+			{
+				TempModValues::Throwing = modValue;
 			}
 
 			RE::PlayerCharacter* playerCharacter = RE::PlayerCharacter::GetSingleton();
@@ -657,70 +743,95 @@ namespace PArroyo_Menus {
 
 			std::uint32_t modValue;
 
-			if (editorID == "00DCBarter")
+			if (editorID == "00PA_Barter")
 			{
-				modValue = TempModValues::barter;
-				TempModValues::barter = 0;
+				modValue = TempModValues::Barter;
+				TempModValues::Barter = 0;
 			}
-			else if (editorID == "00DCEnergyWeapons")
+			else if (editorID == "00PA_EnergyWeapons")
 			{
-				modValue = TempModValues::energyWeapons;
-				TempModValues::energyWeapons = 0;
+				modValue = TempModValues::EnergyWeapons;
+				TempModValues::EnergyWeapons = 0;
 			}
-			else if (editorID == "00DCExplosives")
+			else if (editorID == "00PA_Explosives")
 			{
 				modValue = TempModValues::Traps;
 				TempModValues::Traps = 0;
 			}
-			else if (editorID == "00DCBigGuns")
+			else if (editorID == "00PA_BigGuns")
 			{
-				modValue = TempModValues::bigGuns;
-				TempModValues::bigGuns = 0;
+				modValue = TempModValues::BigGuns;
+				TempModValues::BigGuns = 0;
 			}
-			else if (editorID == "00DCLockpick")
+			else if (editorID == "00PA_Lockpick")
 			{
-				modValue = TempModValues::lockpick;
-				TempModValues::lockpick = 0;
+				modValue = TempModValues::Lockpick;
+				TempModValues::Lockpick = 0;
 			}
-			else if (editorID == "00DCMedicine")
+			else if (editorID == "00PA_Medicine")
 			{
 				modValue = TempModValues::Doctor;
 				TempModValues::Doctor = 0;
 			}
-			else if (editorID == "00DCMeleeWeapons")
+			else if (editorID == "00PA_MeleeWeapons")
 			{
-				modValue = TempModValues::meleeWeapons;
-				TempModValues::meleeWeapons = 0;
+				modValue = TempModValues::MeleeWeapons;
+				TempModValues::MeleeWeapons = 0;
 			}
-			else if (editorID == "00DCRepair")
+			else if (editorID == "00PA_Repair")
 			{
-				modValue = TempModValues::repair;
-				TempModValues::repair = 0;
+				modValue = TempModValues::Repair;
+				TempModValues::Repair = 0;
 			}
-			else if (editorID == "00DCScience")
+			else if (editorID == "00PA_Science")
 			{
-				modValue = TempModValues::science;
-				TempModValues::science = 0;
+				modValue = TempModValues::Science;
+				TempModValues::Science = 0;
 			}
-			else if (editorID == "00DCSneak")
+			else if (editorID == "00PA_Sneak")
 			{
-				modValue = TempModValues::sneak;
-				TempModValues::sneak = 0;
+				modValue = TempModValues::Sneak;
+				TempModValues::Sneak = 0;
 			}
-			else if (editorID == "00DCSpeech")
+			else if (editorID == "00PA_Speech")
 			{
-				modValue = TempModValues::speech;
-				TempModValues::speech = 0;
+				modValue = TempModValues::Speech;
+				TempModValues::Speech = 0;
 			}
-			else if (editorID == "00DCSmallGuns")
+			else if (editorID == "00PA_SmallGuns")
 			{
-				modValue = TempModValues::smallGuns;
-				TempModValues::smallGuns = 0;
+				modValue = TempModValues::SmallGuns;
+				TempModValues::SmallGuns = 0;
 			}
-			else if (editorID == "00DCUnarmed")
+			else if (editorID == "00PA_Unarmed")
 			{
-				modValue = TempModValues::unarmed;
-				TempModValues::unarmed = 0;
+				modValue = TempModValues::Unarmed;
+				TempModValues::Unarmed = 0;
+			}
+			else if (editorID == "00PA_FirstAid")
+			{
+				modValue = TempModValues::FirstAid;
+				TempModValues::FirstAid = 0;
+			}
+			else if (editorID == "00PA_Steal")
+			{
+				modValue = TempModValues::Steal;
+				TempModValues::Steal = 0;
+			}
+			else if (editorID == "00PA_Gambling")
+			{
+				modValue = TempModValues::Gambling;
+				TempModValues::Gambling = 0;
+			}
+			else if (editorID == "00PA_Outdoorsman")
+			{
+				modValue = TempModValues::Outdoorsman;
+				TempModValues::Outdoorsman = 0;
+			}
+			else if (editorID == "00PA_Throwing")
+			{
+				modValue = TempModValues::Throwing;
+				TempModValues::Throwing = 0;
 			}
 
 			RE::PlayerCharacter* playerCharacter = RE::PlayerCharacter::GetSingleton();
@@ -839,6 +950,8 @@ namespace PArroyo_Menus {
 					Shared::RegisterFunction<PlayUISound>(&bgsCodeObj, a_view->asMovieRoot, "PlayUISound");
 
 					a_view->asMovieRoot->Invoke("root.Menu_mc.onCodeObjCreate", nullptr, nullptr, 0);
+
+					REX::DEBUG("CWLevelUpMenu.swf scaleform registeration...");
 				}
 				return true;
 			}
@@ -897,12 +1010,12 @@ namespace PArroyo_Menus {
 
 			bool RegisterFunctions(RE::BSScript::IVirtualMachine* vm)
 			{
-				vm->BindNativeMethod("TCW:PArroyo", "OpenLevelUpMenu", PArroyo_Menus::LevelUpMenu::LevelUpMenu_Papyrus::OpenLevelUpMenu_Papyrus, false, false);
-				vm->BindNativeMethod("TCW:PArroyo", "OpenTagSkillsMenu", PArroyo_Menus::LevelUpMenu::LevelUpMenu_Papyrus::OpenTagSkillsMenu_Papyrus, false, false);
-				vm->BindNativeMethod("TCW:PArroyo", "OpenSpecialRespecMenu", PArroyo_Menus::LevelUpMenu::LevelUpMenu_Papyrus::OpenSpecialRespecMenu_Papyrus, false, false);
-				vm->BindNativeMethod("TCW:PArroyo", "OpenIntenseTrainingMenu", PArroyo_Menus::LevelUpMenu::LevelUpMenu_Papyrus::OpenIntenseTrainingMenu_Papyrus, false, false);
-				vm->BindNativeMethod("TCW:PArroyo", "GetSkillTagged", PArroyo_Menus::LevelUpMenu::LevelUpMenu_Papyrus::GetSkillTagged_Papyrus, false, false);
-				vm->BindNativeMethod("TCW:PArroyo", "SetSkillTagged", PArroyo_Menus::LevelUpMenu::LevelUpMenu_Papyrus::SetSkillTagged_Papyrus, false, false);
+				vm->BindNativeMethod("PArroyo:PArroyo", "OpenLevelUpMenu", PArroyo_Menus::LevelUpMenu::LevelUpMenu_Papyrus::OpenLevelUpMenu_Papyrus, false, false);
+				vm->BindNativeMethod("PArroyo:PArroyo", "OpenTagSkillsMenu", PArroyo_Menus::LevelUpMenu::LevelUpMenu_Papyrus::OpenTagSkillsMenu_Papyrus, false, false);
+				vm->BindNativeMethod("PArroyo:PArroyo", "OpenSpecialRespecMenu", PArroyo_Menus::LevelUpMenu::LevelUpMenu_Papyrus::OpenSpecialRespecMenu_Papyrus, false, false);
+				vm->BindNativeMethod("PArroyo:PArroyo", "OpenIntenseTrainingMenu", PArroyo_Menus::LevelUpMenu::LevelUpMenu_Papyrus::OpenIntenseTrainingMenu_Papyrus, false, false);
+				vm->BindNativeMethod("PArroyo:PArroyo", "GetSkillTagged", PArroyo_Menus::LevelUpMenu::LevelUpMenu_Papyrus::GetSkillTagged_Papyrus, false, false);
+				vm->BindNativeMethod("PArroyo:PArroyo", "SetSkillTagged", PArroyo_Menus::LevelUpMenu::LevelUpMenu_Papyrus::SetSkillTagged_Papyrus, false, false);
 				return true;
 			}
 		}

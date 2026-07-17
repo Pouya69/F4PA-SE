@@ -64,13 +64,14 @@ void InitializeGameVariables(RE::TESDataHandler* dataHandler, std::string mod_es
 	InitializeGlobalVariables(dataHandler);
 
 	// S.P.E.C.I.A.L
-	VanillaActorValues.Strength = dataHandler->LookupForm<RE::ActorValueInfo>(SPECIALFormIDs::StrengthID, mod_esm);
-	VanillaActorValues.Perception = dataHandler->LookupForm<RE::ActorValueInfo>(SPECIALFormIDs::PerceptionID, mod_esm);
-	VanillaActorValues.Endurance = dataHandler->LookupForm<RE::ActorValueInfo>(SPECIALFormIDs::EnduranceID, mod_esm);
-	VanillaActorValues.Charisma = dataHandler->LookupForm<RE::ActorValueInfo>(SPECIALFormIDs::CharismaID, mod_esm);
-	VanillaActorValues.Intelligence = dataHandler->LookupForm<RE::ActorValueInfo>(SPECIALFormIDs::IntelligenceID, mod_esm);
-	VanillaActorValues.Agility = dataHandler->LookupForm<RE::ActorValueInfo>(SPECIALFormIDs::AgilityID, mod_esm);
-	VanillaActorValues.Luck = dataHandler->LookupForm<RE::ActorValueInfo>(SPECIALFormIDs::LuckID, mod_esm);
+	RE::ActorValue* ActorValueSingleton = RE::ActorValue::GetSingleton();
+	VanillaActorValues.Strength = ActorValueSingleton->strength;
+	VanillaActorValues.Perception = ActorValueSingleton->perception;
+	VanillaActorValues.Endurance = ActorValueSingleton->endurance;
+	VanillaActorValues.Charisma = ActorValueSingleton->charisma;
+	VanillaActorValues.Intelligence = ActorValueSingleton->intelligence;
+	VanillaActorValues.Agility = ActorValueSingleton->agility;
+	VanillaActorValues.Luck = ActorValueSingleton->luck;
 
 	// Skills
 	PA_Skills.Barter = dataHandler->LookupForm<RE::ActorValueInfo>(0x005D6D, mod_esm);
@@ -335,7 +336,7 @@ void GetLevelUpFormsFromGame()
 	auto soundsList = tesDataHandler->LookupForm<RE::BGSListForm>(0x0D1EAB, MOD_ESM);
 	for (std::uint32_t soundEntry = 0; soundEntry < soundsList->arrayOfForms.size(); soundEntry++) {
 		RE::BGSSoundDescriptorForm* soundForm = static_cast<RE::BGSSoundDescriptorForm*>(soundsList->arrayOfForms[soundEntry]);
-		if (soundForm == nullptr) {
+		if (soundForm == nullptr || soundForm->GetFormType() != RE::ENUM_FORM_ID::kSNDR) {
 			// Entry in list is not a sound.
 			REX::DEBUG("Skills::GetLevelUpFormsFromGame, form: {} in Sound formlist is not a sound. SkillSounds", soundsList->arrayOfForms[soundEntry]->GetFormEditorID());
 			continue;
@@ -347,7 +348,7 @@ void GetLevelUpFormsFromGame()
 	auto soundsList2 = tesDataHandler->LookupForm<RE::BGSListForm>(0x0D1EAA, MOD_ESM);
 	for (std::uint32_t soundEntry = 0; soundEntry < soundsList2->arrayOfForms.size(); soundEntry++) {
 		RE::BGSSoundDescriptorForm* soundForm = static_cast<RE::BGSSoundDescriptorForm*>(soundsList2->arrayOfForms[soundEntry]);
-		if (soundForm == nullptr) {
+		if (soundForm == nullptr || soundForm->GetFormType() != RE::ENUM_FORM_ID::kSNDR) {
 			// Entry in list is not a sound.
 			REX::DEBUG("Skills::GetLevelUpFormsFromGame, form: {} in Sound formlist is not a sound. PerkSounds, Index: {}", soundsList2->arrayOfForms[soundEntry]->GetFormEditorID(), soundEntry);
 			continue;

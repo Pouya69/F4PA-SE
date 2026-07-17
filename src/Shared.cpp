@@ -108,6 +108,28 @@ namespace Shared {
 
 	}
 
+	RE::BGSComponent* GetBaseComponentFromForm(RE::TESForm* a_form)
+	{
+		if (!a_form) return nullptr;
+
+		auto miscObj = static_cast<RE::TESObjectMISC*>(a_form);
+
+		if (!miscObj || a_form->GetFormType() != RE::ENUM_FORM_ID::kMISC) {
+			auto compObj = static_cast<RE::BGSComponent*>(a_form);
+			return compObj ? compObj : nullptr;
+		}
+
+		if (!miscObj->componentData || miscObj->componentData->empty() || !miscObj->componentData->at(0).first)
+			return nullptr;
+
+		const auto first = miscObj->componentData->at(0).first;
+
+		RE::BGSComponent* compObj = static_cast<RE::BGSComponent*>(first);
+		return compObj;
+
+		return nullptr;
+	}
+
 	const RE::BGSConstructibleObject* GetCOBJ_FromWeapon(const RE::TESObjectWEAP* weaponObj)
 	{
 		return weaponToCOBJ_Map.contains(weaponObj) ? weaponToCOBJ_Map.at(weaponObj) : nullptr;
@@ -152,7 +174,7 @@ namespace Shared {
 			}
 		}
 
-		
+		// Shared::GetAvailableComponentCount(inventoryList, form);
 		
 		
 
@@ -232,15 +254,26 @@ namespace Shared {
 		// signal for real junk is a non-empty crafting-component list
 		// (TESObjectMISC::componentData); the non-junk MISC above have none.
 		// (Books are kBOOK and were never matched here.)
-		if (!obj || obj->formType.get() != RE::ENUM_FORM_ID::kMISC) return false;
+		if (!obj || obj->formType.get() != RE::ENUM_FORM_ID::kMISC) {
+			return false;
+		}
 		auto* misc = static_cast<RE::TESObjectMISC*>(obj);
 		if ((misc->formID & 0x00FFFFFFu) == 0x0000000Fu || (misc->formID & 0x00FFFFFFu) == 0x0000000Au || misc->HasKeyword(Shared::notScrappableKeyword)) return false;  // caps or bobby pins, never
-		if (misc->componentData && !misc->componentData->empty()) {
-			auto compObj = static_cast<RE::TESObjectMISC*>(misc->componentData->at(0).first);
-			if (compObj == nullptr || !compObj->componentData || !compObj->componentData->empty())
-				return false;
 
-			return (std::int32_t)misc->GetFormType() != (std::int32_t)RE::ENUM_FORM_ID::kCMPO;
+		if (misc->componentData && !misc->componentData->empty()) {
+			//if (misc->componentData->at(0).first->GetFormType() != RE::ENUM_FORM_ID::kMISC) {
+			//	return false;
+			//}
+
+			// auto compObj = static_cast<RE::TESObjectMISC*>(misc->componentData->at(0).first);
+
+			//if (compObj == nullptr && compObj->IsBoundObject())
+				//return false;
+
+			//return compObj && compObj->componentData->at(0);
+			return true;
+			
+			//return compObj;
 		}
 
 		return false;
@@ -252,7 +285,12 @@ namespace Shared {
 		auto reverseInv = a_list->data;
 		std::reverse(reverseInv.begin(), reverseInv.end());
 
+		//std::uint32_t amount = a_list->GetItemCount(reinterpret_cast<RE::TESBoundObject*>(a_form));
 		std::uint32_t amount = 0;
+		//for (BGSInventoryItem& item : reverseInv) {
+		//	
+		//}
+		
 
 		for (BGSInventoryItem& item : reverseInv)
 		{
