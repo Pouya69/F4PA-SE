@@ -355,7 +355,7 @@ namespace PArroyo {
 				std::string nameS = skillName.data();
 
 				if (_stricmp(nameS.c_str(), "karma") == 0) {
-					vm->DispatchStaticCall("PArroyo:PArroyo", "ModKarma", nullptr, karmaModAmount);
+					vm->DispatchStaticCall("PArroyo:PArroyo", "ModPlayerKarma", nullptr, karmaModAmount);
 				}
 				else {
 					auto skillAV = GetSkillByName(nameS);
